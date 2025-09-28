@@ -15,7 +15,7 @@ class DotState:
     expires_at_us: int
     base_tick_us: int
     coeff_per_tick: float
-    ember_per_tick: int
+    ember_per_tick: float
     spirit_per_tick: float
     preserve_phase_on_refresh: bool = False
     stacks: int = 0
@@ -50,6 +50,8 @@ class DotState:
         if eng.t_us >= self.expires_at_us or getattr(self.target, "is_dead", False):
             self.next_evt = None
             return
+        #publish the event to listeners
+        self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us)
 
         # deal damage
         mult = 1.0 + (self.stacks * self.stack_mult_per if self.max_stacks > 0 else 0.0)
@@ -60,6 +62,7 @@ class DotState:
 
         # gain resources
         if self.ember_per_tick:
+            print(self.ember_per_tick)
             self.owner.ember.gain(self.ember_per_tick)
         if self.spirit_per_tick:
             self.owner.spiritbar.gain(self.spirit_per_tick)

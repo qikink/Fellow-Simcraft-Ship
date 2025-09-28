@@ -9,16 +9,22 @@ charges:
   max: 2
   recharge_s: 15.0
 pipeline:
-  - type: damage
-    coeff: 281
-  - type: dot
-    name: Fireball
-    duration_s: 12
-    tick_s: 3.0
-    first_tick: interval
-    coeff_per_tick: 49
-    ember_per_tick: 3
-    spirit_per_tick: 1
+  - type: fanout
+    select:
+      count: 100
+      include_primary: true
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+      - type: damage
+        coeff: 281
+      - type: dot
+        name: Fireball
+        duration_s: 12.0
+        tick_s: 3.0
+        first_tick: interval
+        coeff_per_tick: 49
+        ember_per_tick: 1
   - type: resource_gain
     pool: spiritbar
     amount: .33

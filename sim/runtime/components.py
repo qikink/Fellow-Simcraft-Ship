@@ -79,16 +79,16 @@ def comp_damage(ctx: Ctx, step: dict):
 @component("resource_gain")
 def comp_resource_gain(ctx: Ctx, step: dict):
     if step.get("pool") == "ember":
-        ctx.caster.ember.gain(int(step.get("amount", 0)))
+        ctx.caster.ember.gain(float(step.get("amount", 0)))
     if step.get("pool") == "spiritbar":
-        ctx.caster.spiritbar.gain(int(step.get("amount", 0)))
+        ctx.caster.spiritbar.gain(float(step.get("amount", 0)))
 
 @component("resource_spend")
 def comp_resource_spend(ctx: Ctx, step: dict):
     if step.get("pool") == "ember":
-        ctx.caster.ember.spend(int(step.get("amount", 0)))
+        ctx.caster.ember.spend(float(step.get("amount", 0)))
     if step.get("pool") == "spiritbar":
-        ctx.caster.spiritbar.spend(int(step.get("amount", 0)))
+        ctx.caster.spiritbar.spend(float(step.get("amount", 0)))
 
 @component("stack_dot")   # create-or-add-stacks then (re)start ticking if needed
 def comp_stack_dot(ctx: Ctx, step: dict):
@@ -193,4 +193,86 @@ def comp_apply_buff(ctx: Ctx, step: dict):
     known = {"type","name","duration_s"}
     props = {k:v for k,v in step.items() if k not in known}
     ctx.caster.add_buff(Buff(name=name, expires_at_us=expires, props=props))
+
+# sim/runtime/components.py
+def _world(ctx):
+    return (ctx.cfg or {}).get("world", None)
+
+@component("fanout")
+def comp_fanout(ctx: Ctx, step: dict):
+    """
+    Select N targets and run 'pipeline' for each target.
+    step:
+      select:
+        count: int                     # how many to hit (try to get this many)
+        include_primary: bool = True   # prioritize current primary first
+        owner: "enemies" | "allies" = "enemies"
+        prefer_missing_aura: str | None
+        owner_only_for_aura: bool = True
+        distinct: bool = True          # don't hit same target twice
+      pipeline: [ ... ]                # components to run per target
+    """
+    world = _world(ctx)
+    assert world is not None, "fanout requires world in ctx.cfg"
+
+    sel = step.get("select", {})
+    want = int(sel.get("count", 1))
+    include_primary = bool(sel.get("include_primary", True))
+    prefer_aura = sel.get("prefer_missing_aura")
+    owner_only_for_aura = bool(sel.get("owner_only_for_aura", True))
+    distinct = bool(sel.get("distinct", True))
+    side = sel.get("owner", "enemies")
+
+    # candidate pool
+    if side == "enemies":
+        pool = world.enemies_alive()
+    else:
+        # Add allies() helper later if needed; for now stick to enemies.
+        pool = world.enemies_alive()
+
+    if not pool:
+        return
+
+    # Build priority lists
+    primary = world.primary() if include_primary else None
+    chosen = []
+    def add(u):
+        if not u: return
+        if distinct and u in chosen: return
+        chosen.append(u)
+
+    if primary:
+        add(primary)
+
+    if prefer_aura:
+        missing = []
+        haveit = []
+        for u in pool:
+            dot = u.auras.get(prefer_aura)
+            ok = False
+            if not dot:
+                ok = True
+            elif not owner_only_for_aura:
+                ok = False  # it's present (by anyone)
+            else:
+                ok = (dot.owner is not ctx.caster)  # treat as "missing *yours*"
+            (missing if ok else haveit).append(u)
+        for u in missing: add(u)
+        for u in haveit: add(u)
+    else:
+        for u in pool: add(u)
+
+    targets = chosen[:want] if distinct else (chosen * want)[:want]
+    if not targets:
+        return
+
+    # Run the inner pipeline once per target
+    for t in targets:
+        prev = ctx.target
+        try:
+            ctx.target = t
+            run_pipeline(ctx, step.get("pipeline", []))
+        finally:
+            ctx.target = prev
+
 

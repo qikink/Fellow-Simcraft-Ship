@@ -4,20 +4,25 @@ tags: [dot, cooldown]
 cooldown_s: 45
 cast: { gcd_s: 1.0, cast_time_s: 0.0 }
 cost: { ember: 0 }
+
 pipeline:
-  - type: dot
-    name: FrogAttack
-    duration_s: 3
-    tick_s: 1.0
-    first_tick: interval
-    coeff_per_tick: 77
-  - type: dot
-    name: FrogDot
-    duration_s: 15
-    tick_s: 3.0
-    first_tick: interval
-    coeff_per_tick: 19.25
-    spirit_per_tick: 0
+  - type: fanout
+    select:
+      count: 100
+      include_primary: true
+      prefer_missing_aura: none
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+    - type: damage
+      coeff: 231
+    - type: dot
+      name: FrogDot
+      duration_s: 15
+      tick_s: 3.0
+      first_tick: interval
+      coeff_per_tick: 19.25
+      spirit_per_tick: 0
   - type: resource_gain
     pool: spiritbar
     amount: .33

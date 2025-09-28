@@ -1,0 +1,21 @@
+id: "2A"
+name: Flickering Cinders
+points: 1
+patches:
+  # +25% Searing Blaze Embers
+  - ability: searing_blaze
+    where: { type: dot }             # first hit
+    op: scale
+    field: ember_per_tick
+    by: 1.25
+  - ability: apocalypse
+    where: { type: dot }             # first hit
+    op: scale
+    field: ember_per_tick
+    by: 1.25
+  # +25% Engulfing Flames Embers
+  - ability: engulfing_flames
+    where: { type: dot }
+    op: scale
+    field: ember_per_tick
+    by: 1.25

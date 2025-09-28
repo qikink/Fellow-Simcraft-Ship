@@ -7,7 +7,7 @@ class SimpleAPL:
     Priority:
     """
 
-    def __init__(self, player, target, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "all", logger=None, bus=None):
+    def __init__(self, player, target, world, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "all", logger=None, bus=None):
         """
         debug: "off" | "unique" | "all"
           - "unique": log only when the chosen action differs from the previous decision (default)
@@ -18,6 +18,7 @@ class SimpleAPL:
         """
         self.player = player
         self.target = target
+        self.world = world
         self.is_cd_ready = is_cd_ready
         self.debug = debug
         self.log = logger or (lambda s: print(s))
@@ -26,7 +27,7 @@ class SimpleAPL:
         self.is_off_gcd = is_off_gcd
         self.time_until_ready_us = time_until_ready_us
 
-    def _log_decision(self, *, action: str, reason: str, now_us: int):
+    def _log_decision(self, *, action: str, reason: str, now_us: int,target: str=""):
         if self.debug == "off":
             return
         if self.debug == "unique" and action == self._last_action:
@@ -48,7 +49,7 @@ class SimpleAPL:
             st = p.charges.get(aid)
             if st: charges[aid] = f"{st.cur}/{st.max}"
 
-        msg = (f"[{us_to_s(now_us):7.3f}s] APL -> {action}"
+        msg = (f"[{us_to_s(now_us):7.3f}s] APL -> {action},{target}"
                f" | reason={reason}"
                f" | ember={p.ember.cur}"
                f" | spirit={p.spiritbar.cur:.1f}"
@@ -111,53 +112,63 @@ class SimpleAPL:
     def choose(self, now_us: int) -> str | None:
         p, t = self.player, self.target
         # Only call choose() when both gates are clear (runner enforces this)
+        n = self.count_enemies()
+        searing_cov = self.count_aura("SearingBlaze")
+        t = self.world.primary() if self.world else None
+
         if now_us < max(p.gcd_ready_us, p.busy_until_us):
             return None
 
         # Snap
         if p.ember.cur >= 450:
-            self._log_decision(action="detonate", reason="Prevent Ember Overcap", now_us=now_us)
-            return "detonate"
+            self._log_decision(action="detonate", reason="Prevent Ember Overcap", now_us=now_us,target=t.name)
+            return ("detonate",t)
 
         if self.is_cd_ready("apocalypse"):
-            self._log_decision(action="apocalypse", reason="Apocalypse Ready", now_us=now_us)
-            return "apocalypse"
+            self._log_decision(action="apocalypse", reason="Apocalypse Ready", now_us=now_us,target=t.name)
+            return ("apocalypse",t)
 
         # Engulfing when available
         if self.is_cd_ready("engulfing_flames") and t.aura_remains_us("EngulfingFlames", now_us) == 0:
-            self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us)
-            return "engulfing_flames"
+            self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us,target=t.name)
+            return ("engulfing_flames",t)
+
+        # Pyromania if Engulfing not available & Engulfing not present
+        if self.is_cd_ready("pyromania") and t.aura_remains_us("EngulfingFlames", now_us) == 0:
+            self._log_decision(action="pyromania", reason="Pyromania Ready & Engulfing Not Present", now_us=now_us,target=t.name)
+            return ("pyromania",t)
 
         # Fireball when available and not already present
         if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) == 0:
-            self._log_decision(action="fireball", reason="Fireball Ready & Not Present", now_us=now_us)
-            return "fireball"
+            self._log_decision(action="fireball", reason="Fireball Ready & Not Present", now_us=now_us,target=t.name)
+            return ("fireball",t)
 
         if self.is_cd_ready("fire_frogs"):
-            self._log_decision(action="fire_frogs", reason="Frogs Ready", now_us=now_us)
-            return "fire_frogs"
+            self._log_decision(action="fire_frogs", reason="Frogs Ready", now_us=now_us,target=t.name)
+            return ("fire_frogs",t)
 
         # Searing Blaze maintenance on target
-        if t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(0.0):
-            self._log_decision(action="searing_blaze", reason="Searing Blaze Not Present", now_us=now_us)
-            return "searing_blaze"
+        if searing_cov<n:  #t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(0.0):
+            tgt = self.next_enemy_missing_aura("SearingBlaze")
+            self._log_decision(action="searing_blaze", reason="Searing Blaze Not Present", now_us=now_us, target=tgt.name)
+            return ("searing_blaze",tgt)
 
         if self.is_cd_ready("incinerate") and (self.player.spiritbar.cur >= 96) and (self.player.ember.cur > 200):
-            self._log_decision(action="detonate", reason="Spending Down to Incinerate", now_us=now_us)
-            return "detonate"
+            self._log_decision(action="detonate", reason="Spending Down to Incinerate", now_us=now_us,target=t.name)
+            return ("detonate",t)
 
         if self.is_cd_ready("incinerate") and (self.player.spiritbar.cur >= 100) and (self.player.ember.cur <= 200):
-            self._log_decision(action="incinerate", reason="Spirit Charged & Embers Low Enough", now_us=now_us)
-            return "incinerate"
+            self._log_decision(action="incinerate", reason="Spirit Charged & Embers Low Enough", now_us=now_us,target=t.name)
+            return ("incinerate",t)
 
         if self.is_cd_ready("wildfire") and not p.has_buff("Wildfire") and t.aura_remains_us("EngulfingFlames", now_us) >= 3:
-            self._log_decision(action="wildfire", reason="Wildfire ready & Engulfing Active", now_us=now_us)
-            return "wildfire"
+            self._log_decision(action="wildfire", reason="Wildfire ready & Engulfing Active", now_us=now_us,target=t.name)
+            return ("wildfire",None)
 
         if p.ember.cur >= 100 and t.aura_remains_us("EngulfingFlames", now_us) > 0:
-            self._log_decision(action="detonate", reason="Embers Available & Engulfing Present", now_us=now_us)
-            return "detonate"
+            self._log_decision(action="detonate", reason="Embers Available & Engulfing Present", now_us=now_us,target=t.name)
+            return ("detonate",t)
 
         # Infernal Wave filler
-        self._log_decision(action="infernal_wave", reason="No Other Actions Available", now_us=now_us)
-        return "infernal_wave"
+        self._log_decision(action="infernal_wave", reason="No Other Actions Available", now_us=now_us,target=t.name)
+        return ("infernal_wave",t)

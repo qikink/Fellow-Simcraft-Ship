@@ -40,7 +40,7 @@ def load_apl_factory(apl_path: str) -> Callable[..., Any]:
     mod = importlib.util.module_from_spec(spec)
     assert spec and spec.loader, f"Cannot load APL at {apl_path}"
     spec.loader.exec_module(mod)  # type: ignore
-    assert hasattr(mod, "make_apl"), "apl.py must define make_apl(player, target, helpers) -> APL"
+    assert hasattr(mod, "make_apl"), "apl.py must define make_apl(player, target, world, helpers) -> APL"
     return mod.make_apl
 
 def load_enabled_talents(talents_dir: str, enabled: Optional[dict]) -> list[dict]:

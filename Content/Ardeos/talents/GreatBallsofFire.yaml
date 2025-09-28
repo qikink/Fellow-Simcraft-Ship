@@ -1,0 +1,16 @@
+id: "1C"
+name: Great Balls of Fire
+points: 2
+patches:
+  # +60% initial Fireball hit
+  - ability: fireball
+    where: { type: damage }             # first hit
+    op: scale
+    field: coeff
+    by: 1.60
+  # +60% Fireball DoT per-tick coefficient
+  - ability: fireball
+    where: { type: dot, name: Fireball }
+    op: scale
+    field: coeff_per_tick
+    by: 1.60

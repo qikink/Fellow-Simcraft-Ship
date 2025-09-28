@@ -1,0 +1,11 @@
+id: "1A"
+name: Slow Burn
+points: 2
+type: on_dot_tick_extend
+source_dot: Fireball
+owner_only: true          # only extend your own EF/SB
+extend:
+  - dot: EngulfingFlames
+    seconds: 0.5
+  - dot: SearingBlaze
+    seconds: 0.5

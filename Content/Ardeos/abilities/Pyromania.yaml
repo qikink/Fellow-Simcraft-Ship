@@ -1,0 +1,24 @@
+# content/characters/pyro/abilities/cleave.yaml
+id: pyromania
+name: Pyromania
+cast: { gcd_s: 0.0, cast_time_s: 0.0 }
+cost: { ember: 0 }
+cooldown_s: 45
+off_gcd: true
+pipeline:
+  - type: fanout
+    select:
+      count: 3
+      include_primary: true
+      prefer_missing_aura: EngulfingFlames     # prioritize enemies not already burning (by you)
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+      - type: dot
+        name: EngulfingFlames
+        duration_s: 9.0
+        tick_s: 3.0
+        first_tick: interval
+        coeff_per_tick: 182
+        ember_per_tick: 10
+        spirit_per_tick: 0

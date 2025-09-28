@@ -18,15 +18,19 @@ class ChargeState:
     pending: list = field(default_factory=list)  # scheduled recharge events
 
 class EmberPool:
-    def __init__(self, maximum: int=500, starting: int=200):
+    def __init__(self,owner: "Unit", maximum: float=500, starting: float=200):
         self.max = maximum
         self.cur = starting
         self.generated = 0
         self.spent = 0
+        self.owner = owner
     def gain(self, v: int):
         self.generated += v
         self.cur = min(self.max, self.cur + v)
     def spend(self, v: int) -> bool:
+        is_refund = self.owner.rng.roll("refund", self.owner.base_spirit_gain-1)
+        if is_refund:
+            v=0
         if self.cur >= v:
             self.cur -= v
             self.spent += v
@@ -60,7 +64,7 @@ class Unit:
         self.base_crit = base_crit
         self.base_spirit_gain = base_spirit_gain
 
-        self.ember = EmberPool(500,200)
+        self.ember = EmberPool(self,500,200)
         self.spiritbar = SpiritPool(self,100, 0)
         self.gcd_ready_us = 0
         self.busy_until_us = 0
@@ -201,6 +205,6 @@ class Unit:
 
 
 class TargetDummy(Unit):
-    def __init__(self, eng, bus, rng):
-        super().__init__("Target", eng, bus, rng, haste=1.0, power=0.0, base_crit=0.0)
+    def __init__(self, eng, bus, rng, name:str = "Target"):
+        super().__init__(name, eng, bus, rng, haste=1.0, power=0.0, base_crit=0.0)
         self.is_dead = False

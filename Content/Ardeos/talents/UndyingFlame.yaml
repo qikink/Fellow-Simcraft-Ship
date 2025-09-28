@@ -1,0 +1,16 @@
+id: "2C"
+name: Flickering Cinders
+points: 1
+patches:
+  # +3s Engulfing Flames
+  - ability: engulfing_flames
+    where: { type: dot }
+    op: add
+    field: duration_s
+    by: 3
+  - ability: pyromania
+    where: { type: dot }
+    op: add
+    field: duration_s
+    by: 3
+
