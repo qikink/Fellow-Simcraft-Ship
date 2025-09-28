@@ -1,0 +1,20 @@
+id: infernal_wave
+name: "Infernal Wave"
+tags: [spell, builder]
+cooldown_s: 0
+cast: { gcd_s: 1.0, cast_time_s: 2.0 }
+cost: { ember: 0 }
+pipeline:
+  - type: damage
+    coeff: 155
+    mods:
+      - type: mult_if_target_has_aura
+        aura: Burn
+        mult: 1.2
+        config_flag: bolt_vs_burn_20p
+  - type: resource_gain
+    pool: ember
+    amount: 40
+  - type: resource_gain
+    pool: spiritbar
+    amount: .66

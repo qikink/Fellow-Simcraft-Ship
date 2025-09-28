@@ -1,0 +1,15 @@
+id: detonate
+name: Detonate
+tags: [spender]
+cooldown_s: 0
+cast: { gcd_s: 1.0, cast_time_s: 0.0 }
+cost: { ember: 100 }
+pipeline:
+  - type: resource_spend
+    pool: ember
+    amount: 100
+  - type: damage
+    coeff: 249
+  - type: resource_gain
+    pool: spiritbar
+    amount: .33

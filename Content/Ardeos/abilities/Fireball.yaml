@@ -1,0 +1,24 @@
+id: fireball
+name: "Fireball"
+tags: [cooldown, nuke, dot_applier]
+cast: { gcd_s: 1.0, cast_time_s: 0.0 }
+cost: { ember: 0 }
+cooldown_s: 0.0
+spirit_gain: 2
+charges:
+  max: 2
+  recharge_s: 15.0
+pipeline:
+  - type: damage
+    coeff: 281
+  - type: dot
+    name: Fireball
+    duration_s: 12
+    tick_s: 3.0
+    first_tick: interval
+    coeff_per_tick: 49
+    ember_per_tick: 3
+    spirit_per_tick: 1
+  - type: resource_gain
+    pool: spiritbar
+    amount: .33

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/Fellow-Simcraft-Ship.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Apocalypse.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Detonate.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/EngulfingFlames.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogs.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Fireball.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Incinerate.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/InfernalWave.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/SearingBlaze.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Wildfire.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/apl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/character.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Mara/abilities/Stab.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Mara/apl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Mara/character.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/Ice.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/apl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/character.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/run_me.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/apl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/dot.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/rng.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/core/unit.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runners/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runners/target_dummy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runtime/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runtime/components.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runtime/loader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sim/runtime/pack.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="33Hzkq3lBNQhFweG5dBpANpSAkK" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Python.apl.executor": "Run",
+    "Python.run_me.executor": "Run",
+    "Python.target_dummy.executor": "Run",
+    "Python.unit.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/qikink-rig/PycharmProjects/Fellow-Simcraft-Ship/Content/Ardeos",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Content\Ardeos" />
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Content\Rime" />
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Content\Mara" />
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Rime\abilities" />
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Mara\abilities" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\Content" />
+      <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\sim" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Fellow-Simcraft-Ship" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-b3d66beaba9a-c6efb3732140-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26199.168" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="" />
+      <created>1758988933534</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1758988933534</updated>
+      <workItem from="1758988948025" duration="16910000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$unit.coverage" NAME="unit Coverage Results" MODIFIED="1758992629996" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$run_me.coverage" NAME="run_me Coverage Results" MODIFIED="1759020589687" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$apl.coverage" NAME="apl Coverage Results" MODIFIED="1758997445089" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$target_dummy.coverage" NAME="target_dummy Coverage Results" MODIFIED="1758995002647" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/runners" />
+  </component>
+</project>

@@ -1,0 +1,15 @@
+id: stab
+name: "Stab"
+tags: [spell, builder]
+cooldown_s: 0
+cast: { gcd_s: 1.0, cast_time_s: 0.0 }
+cost: { ember: 0 }
+pipeline:
+  - type: damage
+    coeff: 155
+  - type: resource_gain
+    pool: combo
+    amount: 1
+  - type: resource_gain
+    pool: spiritbar
+    amount: 2

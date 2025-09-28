@@ -1,0 +1,18 @@
+id: engulfing_flames
+name: "Engulfing Flames"
+tags: [dot]
+cooldown_s: 20
+cast: { gcd_s: 1.0, cast_time_s: 2.0 }
+cost: { ember: 0 }
+pipeline:
+  - type: dot
+    name: EngulfingFlames
+    duration_s: 9.0
+    tick_s: 3.0
+    first_tick: interval
+    coeff_per_tick: 182
+    ember_per_tick: 10
+    spirit_per_tick: 0
+  - type: resource_gain
+    pool: spiritbar
+    amount: .66

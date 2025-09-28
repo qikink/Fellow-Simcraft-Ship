@@ -1,0 +1,18 @@
+id: searing_blaze
+name: "Searing Blaze"
+tags: [dot]
+cooldown_s: 0
+cast: { gcd_s: 1.0, cast_time_s: 0.0 }
+cost: { ember: 0 }
+pipeline:
+  - type: dot
+    name: SearingBlaze
+    duration_s: 24.0
+    tick_s: 2.0
+    first_tick: interval
+    coeff_per_tick: 67
+    ember_per_tick: 1
+    spirit_per_tick: 0
+  - type: resource_gain
+    pool: spiritbar
+    amount: .33

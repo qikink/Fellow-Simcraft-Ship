@@ -1,0 +1,12 @@
+id: wildfire
+name: Wildfire
+tags: [cooldown, buff]
+cooldown_s: 60.0            # 60s CD
+cast: { gcd_s: 0.0, cast_time_s: 0.0 }
+off_gcd: true
+cost: { ember: 0 }
+pipeline:
+  - type: apply_buff
+    name: Wildfire
+    duration_s: 9.0        # 9s duration
+    dot_haste_bonus: 0.20        # +20% dot haste

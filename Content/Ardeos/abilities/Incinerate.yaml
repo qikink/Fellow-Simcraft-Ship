@@ -1,0 +1,31 @@
+id: incinerate
+name: "Incinerate"
+tags: [cooldown, nuke, dot_applier]
+cast: { gcd_s: 1.0, cast_time_s: 4.0 }
+cost: { spirit_bar: 100 }
+cooldown_s: 0
+pipeline:
+  - type: apply_buff
+    name: Heroism
+    duration_s: 20        # 9s duration
+    haste_bonus: 0.30        # +30% haste
+  - type: channel
+    ticks: 10
+    on_tick:
+      - type: damage
+        coeff: 95
+      - type: resource_gain               # 360 ember total -> 36 × 10
+        pool: ember
+        amount: 36
+      - type: stack_dot                   # apply/refresh stacking DoT
+        name: IncinerateMark
+        duration_s: 12.0
+        tick_s: 1.0
+        first_tick: interval
+        coeff_per_tick: 24.0
+        max_stacks: 10
+        stack_mult_per: 0.20              # +20% per stack (dynamic, no snapshot)
+        add_stacks: 1
+  - type: resource_gain
+    pool: spiritbar
+    amount: 1.5
