@@ -88,7 +88,6 @@ class DotState:
 
     def _tick_cb(self):
         eng = self.owner.eng
-
         if eng.t_us >= self.expires_at_us or getattr(self.target, "is_dead", False):
             self._remove_now()
             return
@@ -98,7 +97,6 @@ class DotState:
             return
         #publish the pre-event to listeners who may modify it
         self.owner.bus.pub("dot_pre_tick", dot=self, t_us=eng.t_us)
-
         temp_bonus_crit = 0
         if getattr(self, "_force_crit_tick", False):
             temp_bonus_crit = 1
@@ -125,7 +123,6 @@ class DotState:
             is_crit = True
         self.owner.add_damage(dmg, self.name)
         self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us,crit=is_crit)
-
         # gain resources
         if self.ember_per_tick:
             self.owner.ember.gain(self.ember_per_tick)
@@ -138,9 +135,11 @@ class DotState:
         k = max(0, (eng.t_us - phase0 + I - 1) // I) + 1
         next_tick = phase0 + k * I
         # if next tick would land after expiry, let expire event do the cleanup
-        if next_tick >= self.expires_at_us:
-            self.next_evt = None
-            return
+        #if next_tick >= self.expires_at_us:
+            #vestigal, left for posterity
+            #print("I'm dying!")
+            #self.next_evt = None
+            #return
         self.next_evt = eng.schedule_at(next_tick, self._tick_cb, phase=DOT_TICK)
 
     def refresh(self, now_us: int, new_base_duration_us: int):
@@ -150,6 +149,14 @@ class DotState:
             self.anchor_us = now_us
             self.first_delay_us = self.current_tick_interval_us()
         self.schedule_expire()  # <-- reschedule
+
+        # schedule next anchored tick honoring haste
+        #I = self.current_tick_interval_us()
+        #phase0 = self.anchor_us + self.first_delay_us
+        #k = max(0, (eng.t_us - phase0 + I - 1) // I) + 1
+        #next_tick = phase0 + k * I
+
+        #self.next_evt = eng.schedule_at(next_tick, self._tick_cb, phase=DOT_TICK)
 
     def add_stacks(self, now_us: int, add: int, new_duration_us: Optional[int] = None):
         if self.max_stacks > 0:

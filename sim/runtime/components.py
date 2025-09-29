@@ -211,9 +211,13 @@ def comp_dot(ctx: Ctx, step: dict):
         ctx.eng.schedule_at(dot.expires_at_us, on_expire)
     else:
         overlap_dur = 0
+        print("about to refresh")
         if dot.refresh_overlap > 0:
+            print("building a longer refresh")
             remaining_dur_us = dot.expires_at_us - now
             overlap_dur = max(0,min(remaining_dur_us,dot.base_duration_us*dot.refresh_overlap)) #pandemic if applicable
+            print("overlap_dur")
+            print(overlap_dur)
         dot.refresh(now, dur_us+overlap_dur)
 
 @component("apply_buff")
