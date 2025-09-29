@@ -1,0 +1,15 @@
+id: "6C"
+name: Reign of Fire
+points: 3
+type: on_cast_ppm_proc
+source_cast: detonate
+ppm: 1.0
+effects:
+  - type: grant_charge
+    ability: fireball
+    amount: 1
+  - type: guarantee_next_crit
+    ability: fireball
+    charges: 1
+
+

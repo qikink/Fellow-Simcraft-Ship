@@ -1,0 +1,11 @@
+id: "2B"
+name: Flickering Cinders
+points: 1
+patches:
+  # +25% Infernal Wave Cleave
+  - ability: infernal_wave
+    where: { type: damage, name: FlareUpCleave }
+    op: add
+    field: coeff
+    by: 38.75
+

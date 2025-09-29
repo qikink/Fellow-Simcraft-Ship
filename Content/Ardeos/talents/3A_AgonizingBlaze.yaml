@@ -1,0 +1,10 @@
+id: "3A"
+name: Agonizing Blaze
+points: 2
+type: stack_amp_on_damage
+source:
+  dot_name: SearingBlaze
+per_stack: 0.03                 # +3% per hit
+max_stacks: 10                  # cap at +30%
+owner_only: true
+aura: SearingBlazeAmp

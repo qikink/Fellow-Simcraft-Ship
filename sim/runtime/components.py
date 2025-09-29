@@ -69,12 +69,32 @@ def comp_damage(ctx: Ctx, step: dict):
                 if ctx.target.has_aura(mod["aura"]):
                     mult *= float(mod.get("mult", 1.0))
 
-    base = coeff * ctx.power * mult
+    bonus_force_crit = 0
+    force = ctx.caster.consume_next_crit(ctx.spec.id)
+    if force:
+        bonus_force_crit=1
+    if ctx.crit_chance()+bonus_force_crit > 1:
+        mult *= (ctx.crit_chance()+bonus_force_crit)
+
+    mult_from_ctx = float(ctx.vars.pop("damage_mult", 1.0))
+    base = coeff * ctx.power * mult * mult_from_ctx
     # dynamic crit roll
     is_crit = ctx.caster.rng.roll("crit", ctx.crit_chance())
+    if force:
+        is_crit = True
     dmg = base * (2.0 if is_crit else 1.0)
-    ctx.caster.spiritbar.gain(dmg/400) #gain spirit for damage dealth, approx 1% per 400% of primary stat dealt
+    ctx.caster.spiritbar.gain(dmg/400) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
     ctx.caster.add_damage(dmg, ctx.spec.name)
+    ctx.bus.pub("damage_done",
+                t_us=ctx.eng.t_us,
+                ability_id=ctx.spec.id,
+                step_type="damage",
+                target=ctx.target,
+                crit=is_crit,
+                amount=dmg)
+    ctx.vars["last_hit_amount"] = dmg
+    ctx.vars["last_hit_crit"] = is_crit
+    ctx.vars["last_hit_ability"] = ctx.spec.id
 
 @component("resource_gain")
 def comp_resource_gain(ctx: Ctx, step: dict):
@@ -100,6 +120,7 @@ def comp_stack_dot(ctx: Ctx, step: dict):
     max_stacks = int(step.get("max_stacks", 0))
     add_stacks = int(step.get("add_stacks", 1))
     first = step.get("first_tick", "interval")
+    bonus_crit = float(step.get("bonus_crit", 0.0))
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste + ctx.caster.dot_haste_bonus()))) if first == "interval" else 0
 
     dot = ctx.target.auras.get(name)
@@ -111,7 +132,8 @@ def comp_stack_dot(ctx: Ctx, step: dict):
             base_duration_us=dur_us, expires_at_us=now + dur_us,
             base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
             ember_per_tick=0, spirit_per_tick=0,preserve_phase_on_refresh=True,
-            stacks=0, max_stacks=max_stacks, stack_mult_per=stack_mult_per
+            stacks=0, max_stacks=max_stacks, stack_mult_per=stack_mult_per,
+            bonus_crit=bonus_crit
         )
         ctx.target.auras[name] = dot
         ctx.caster.active_dots.append(dot)
@@ -155,8 +177,9 @@ def comp_dot(ctx: Ctx, step: dict):
     dur_us = s_to_us(float(step["duration_s"]))
     base_tick_us = s_to_us(float(step["tick_s"]))
     coeff_per_tick = float(step.get("coeff_per_tick", 0.0))
-    ember_per_tick = int(step.get("ember_per_tick", 0))
-    spirit_per_tick = int(step.get("spirit_per_tick", 0))
+    ember_per_tick = float(step.get("ember_per_tick", 0))
+    spirit_per_tick = float(step.get("spirit_per_tick", 0))
+    bonus_crit = float(step.get("bonus_crit", 0.0))
     first = step.get("first_tick", "interval")  # "interval" or 0
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste))) if first == "interval" else 0
 
@@ -169,6 +192,7 @@ def comp_dot(ctx: Ctx, step: dict):
             base_duration_us=dur_us, expires_at_us=now + dur_us,
             base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
             ember_per_tick=ember_per_tick, spirit_per_tick=spirit_per_tick,
+            bonus_crit = bonus_crit,
             preserve_phase_on_refresh=False
         )
         ctx.target.auras[name] = dot
@@ -218,7 +242,9 @@ def comp_fanout(ctx: Ctx, step: dict):
     sel = step.get("select", {})
     want = int(sel.get("count", 1))
     include_primary = bool(sel.get("include_primary", True))
+    exclude_primary = bool(sel.get("exclude_primary", False))
     prefer_aura = sel.get("prefer_missing_aura")
+    require_aura = sel.get("require_aura")
     owner_only_for_aura = bool(sel.get("owner_only_for_aura", True))
     distinct = bool(sel.get("distinct", True))
     side = sel.get("owner", "enemies")
@@ -259,8 +285,26 @@ def comp_fanout(ctx: Ctx, step: dict):
             (missing if ok else haveit).append(u)
         for u in missing: add(u)
         for u in haveit: add(u)
+    if require_aura:
+        missing = []
+        haveit = []
+        for u in pool:
+            dot = u.auras.get(require_aura)
+            ok = False
+            if dot and (dot.owner or not owner_only_for_aura):
+                ok = True
+            else:
+                ok = False  # treat as "missing *yours*"
+            (haveit if ok else missing).append(u)
+        for u in haveit: add(u)
     else:
         for u in pool: add(u)
+
+    primary = world.primary() if exclude_primary else None
+    if exclude_primary:
+        for u in chosen:
+            if u == primary:
+                chosen.remove(u)
 
     targets = chosen[:want] if distinct else (chosen * want)[:want]
     if not targets:
@@ -276,3 +320,105 @@ def comp_fanout(ctx: Ctx, step: dict):
             ctx.target = prev
 
 
+@component("dot_from_last_hit")
+def comp_dot_from_last_hit(ctx: Ctx, step: dict):
+    """
+    Apply a DoT based on the immediately preceding hit in this per-target pipeline.
+    Keys:
+      name: str
+      duration_s: float
+      tick_s: float              # base tick period (haste will speed it up)
+      percent_of_hit: float      # e.g., 0.60 for 60%
+      require_crit: bool = False # only apply if last hit crit
+      first_tick: "interval"|"immediate" (default "interval")
+    Notes:
+      - Uses *actual* hit amount (after crit/multipliers) by design.
+      - Sets coeff_per_tick so that at current haste, DPS ~= total/duration.
+        If haste later changes, total will drift (consistent with your other DoTs).
+    """
+    # gate on last hit existing (and, optionally, crit)
+    amt   = float(ctx.vars.get("last_hit_amount", 0.0))
+    lcrit = bool(ctx.vars.get("last_hit_crit", False))
+    if amt <= 0.0:
+        return
+    if step.get("require_crit", False) and not lcrit:
+        return
+
+    name        = step["name"]
+    dur_s       = float(step["duration_s"])
+    base_tick_s = float(step.get("tick_s", 1.0))
+    pct         = float(step.get("percent_of_hit", 0.60))
+    first_mode  = step.get("first_tick", "interval")
+
+    # effective tick period under current DoT haste model
+    eff_haste = max(1e-9, ctx.caster.haste + ctx.caster.dot_haste_bonus())
+    eff_tick_s = base_tick_s / eff_haste
+
+    # Choose coeff_per_tick so DPS ≈ (pct * amt) / dur_s
+    # Since per-tick damage = coeff_per_tick * power, DPS ≈ (coeff_per_tick * power) / eff_tick_s
+    # => coeff_per_tick ≈ (pct*amt / dur_s) * (eff_tick_s / power)
+    coeff_per_tick = (pct * amt / dur_s) * (eff_tick_s / max(1e-9, ctx.caster.power))
+
+    # Build the dot state (like your `dot` component does)
+    now = ctx.eng.t_us
+    dur_us  = s_to_us(dur_s)
+    base_tick_us = s_to_us(base_tick_s)
+    first_delay_us = 0 if first_mode == "immediate" else int(round(base_tick_us / eff_haste))
+
+    dot = DotState(
+        name=name, owner=ctx.caster, target=ctx.target,
+        anchor_us=now, first_delay_us=first_delay_us,
+        base_duration_us=dur_us, expires_at_us=now + dur_us,
+        base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
+        ember_per_tick=0, preserve_phase_on_refresh=True,
+        spirit_per_tick=0,bonus_crit=0
+    )
+    # tag for analytics if you want
+    dot.src_ability_id = ctx.vars.get("last_hit_ability", ctx.spec.id)
+
+    # register & schedule
+    ctx.target.auras[name] = dot
+    ctx.caster.active_dots.append(dot)
+    dot.schedule_first_tick()
+
+
+@component("scale_by_my_dot_count")
+def comp_scale_by_my_dot_count(ctx: Ctx, step: dict):
+    """
+    Put a one-shot damage multiplier into ctx.vars based on how many of *your*
+    distinct DoTs are on the current target.
+    step:
+      per: 0.15                  # +15% per unique DoT (default 0.15)
+      cap: null | int            # optional cap on #dots counted, e.g. 10
+      include: [names...]        # optional whitelist of DoT names
+      exclude: [names...]        # optional blacklist of DoT names
+      owner_only: true           # default true (only your DoTs)
+    """
+    per = float(step.get("per", 0.15))
+    cap = step.get("cap")
+    include = set(step.get("include", [])) or None
+    exclude = set(step.get("exclude", []))
+    owner_only = bool(step.get("owner_only", True))
+    print("scaling damage")
+    n = 0
+    for aura in ctx.target.auras.values():
+        if not isinstance(aura, DotState):
+            continue
+        if owner_only and aura.owner is not ctx.caster:
+            continue
+        name = aura.name
+        if include is not None and name not in include:
+            continue
+        if name in exclude:
+            continue
+        if aura.expires_at_us <= ctx.eng.t_us:
+            continue
+        n += 1
+
+    if cap is not None:
+        n = min(int(cap), n)
+
+    mult = 1.0 + per * n
+    print(mult)
+    # compose if another step already set a multiplier
+    ctx.vars["damage_mult"] = float(ctx.vars.get("damage_mult", 1.0)) * mult

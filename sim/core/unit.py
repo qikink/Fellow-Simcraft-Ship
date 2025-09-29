@@ -24,7 +24,7 @@ class EmberPool:
         self.generated = 0
         self.spent = 0
         self.owner = owner
-    def gain(self, v: int):
+    def gain(self, v: float):
         self.generated += v
         self.cur = min(self.max, self.cur + v)
     def spend(self, v: int) -> bool:
@@ -52,6 +52,64 @@ class SpiritPool:
         if self.cur >= v:
             self.cur -= v; self.spent += v; return True
         return False
+
+def reduce_cooldown_us(player, eng, ability_id: str, delta_us: int):
+    now = eng.t_us
+
+    # Charges path
+    st = player.charges.get(ability_id) if hasattr(player, "charges") else None
+    if st:
+        # Pull the *soonest* pending recharge earlier
+        if st.pending:
+            # cancel & reschedule earlier
+            evt = min(st.pending, key=lambda e: e.t_us)
+            new_t = max(now, evt.t_us - delta_us)
+            evt.cancelled = True
+            st.pending.remove(evt)
+
+            def on_recharge():
+                st.cur = min(st.max, st.cur + 1)
+                # if still not full, schedule next (whatever your existing logic is)
+                # (optional) try ensure_charges again here
+            new_evt = eng.schedule_at(new_t, on_recharge)
+            st.pending.append(new_evt)
+            return
+
+        # No pending but not full? schedule one now minus delta
+        if st.cur < st.max:
+            new_t = max(now, now + s_to_us(st.recharge_s) - delta_us)
+            def on_recharge():
+                st.cur = min(st.max, st.cur + 1)
+            st.pending = [eng.schedule_at(new_t, on_recharge)]
+        return
+
+    # Simple cooldown path
+    ready_at = player.cooldown_ready_us.get(ability_id, 0)
+    print("CD")
+    print(ability_id)
+    print(ready_at)
+    if now < ready_at:
+        player.cooldown_ready_us[ability_id] = max(now, ready_at - delta_us)
+
+def grant_charge(player, eng, ability_id: str, amount: int = 1):
+    print("Granting a Charge!")
+    print(ability_id)
+    print(amount)
+    st = getattr(player, "charges", {}).get(ability_id)
+    if not st or amount <= 0:
+        return 0
+    added = 0
+    while amount > 0 and st.cur < st.max:
+        st.cur += 1
+        added += 1
+        amount -= 1
+        # if we just became full, cancel the soonest pending recharge
+        if st.cur >= st.max and getattr(st, "pending", None):
+            # cancel all pending to avoid overfill
+            for e in st.pending:
+                e.cancelled = True
+            st.pending.clear()
+    return added
 
 class Unit:
     def __init__(self, name, eng, bus, rng: RNG, haste: float = 1.0, power: float = 100.0, base_crit: float = 0.05, base_spirit_gain: float = 1.0):
@@ -85,6 +143,7 @@ class Unit:
         self.total_damage = 0.0
 
         self.active_dots: List[object] = []   # <-- track DotState instances
+        self.next_crit_for: dict[str, int] = {}  # ability_id -> stacks
 
 
     def current_crit(self)->float:
@@ -202,6 +261,17 @@ class Unit:
             evt = self.eng.schedule_in(s_to_us(st.recharge_s), on_recharge)
             st.pending.append(evt)
         return True
+
+    def grant_next_crit(self, ability_id: str, stacks: int = 1):
+        self.next_crit_for[ability_id] = self.next_crit_for.get(ability_id, 0) + stacks
+
+    def consume_next_crit(self, ability_id: str) -> bool:
+        n = self.next_crit_for.get(ability_id, 0)
+        if n > 0:
+            if n == 1: self.next_crit_for.pop(ability_id, None)
+            else:      self.next_crit_for[ability_id] = n - 1
+            return True
+        return False
 
 
 class TargetDummy(Unit):

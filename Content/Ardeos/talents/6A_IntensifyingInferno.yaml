@@ -1,0 +1,15 @@
+id: "6A"
+name: Intensifying Inferno
+points: 1
+patches:
+  - ability: infernal_wave
+    op: insert_before
+    where: { type: damage }     # insert right before each damage step (per target)
+    step:
+      type: scale_by_my_dot_count
+      per: 0.15                 # +15% per unique DoT
+      owner_only: true
+      # include: []             # optional whitelist
+      # exclude: []             # optional blacklist (e.g., to exclude the proc DoT)
+      # cap: 10                 # optional cap
+

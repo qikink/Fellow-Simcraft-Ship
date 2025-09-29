@@ -1,0 +1,99 @@
+before:
+                where = p["where"];
+                insert_step = p["step"]
+                inserted = False
+                for parent, idx, step, path in _iter_steps_with_parent(ab.pipeline):
+                    if where.get("type") and step.get("type") != where["type"]:
+                        continue
+                    if "name" in where and step.get("name") != where["name"]:
+                        continue
+                    parent.insert(idx, insert_step.copy())
+                    inserted = True
+                if not inserted and warn_no_match:
+                    print(f"[talents] warn: insert_before found no match in '{ab_id}' for {where}")
+                continue
+
+after:
+
+                where = p["where"]
+                insert_step = p["step"]
+                inserted = False
+                for parent, idx, step, path in _iter_steps_with_parent(ab.pipeline):
+                    if where.get("type") and step.get("type") != where["type"]:
+                        continue
+                    if "name" in where and step.get("name") != where["name"]:
+                        continue
+                    parent.insert(idx + 1, insert_step.copy())
+                    inserted = True
+                    # (optionally break if you only want the first match)
+                if not inserted and warn_no_match:
+                    print(f"[talents] warn: insert_after found no match in '{ab_id}' for {where}")
+                continue
+
+
+
+above:
+
+    for t in talents:
+        for p in (t.get("patches") or []):
+            ab_id = p["ability"]
+            ab = specs.get(ab_id)
+            if not ab:
+                if warn_no_match:
+                    print(f"[talents] warn: ability '{ab_id}' not found for patch in talent {t.get('id')}")
+                continue
+
+            where = p.get("where", {})
+            want_type = where.get("type")
+            want_name = where.get("name")  # optional (e.g., dot name)
+            matches: List[Tuple[dict, Tuple]] = []
+            print(want_type, want_name)
+            for step, path in _iter_steps_recursive(ab.pipeline):
+                if want_type and step.get("type") != want_type:
+                    continue
+                if want_name is not None and step.get("name") != want_name:
+                    continue
+                matches.append((step, path))
+
+            if not matches:
+                if warn_no_match:
+                    print(f"[talents] warn: no steps matched where={where} in ability '{ab_id}' (talent {t.get('id')})")
+                continue
+
+            targets = matches
+            if "index" in p:
+                idx = int(p["index"])
+                if 0 <= idx < len(matches):
+                    targets = [matches[idx]]
+                else:
+                    if warn_no_match:
+                        print(
+                            f"[talents] warn: index {idx} out of range ({len(matches)}) for ability '{ab_id}' (talent {t.get('id')})")
+                    continue
+
+            op = p["op"];
+            if "field" in p:
+                field = p["field"]
+                for (step, path) in targets:
+                    print(step,path)
+                    if op == "set":
+                        step[field] = float(p["to"])
+                    else:
+                        if field not in step:
+                            # silently skip if field missing for add/scale; feel free to warn instead
+                            if warn_no_match:
+                                print(
+                                    f"[talents] warn: field '{field}' missing at {path} in '{ab_id}' (talent {t.get('id')})")
+                            continue
+                        if op == "scale":
+                            print("scale")
+                            print(step[field],p["by"])
+                            step[field] = float(step[field]) * float(p["by"])
+                            print(step[field])
+                        elif op == "add":
+                            print("add")
+                            print(step[field], p["by"])
+                            step[field] = float(step[field]) + float(p["by"])
+                        else:
+                            if warn_no_match:
+                                print(f"[talents] warn: unknown op '{op}' in talent {t.get('id')}")

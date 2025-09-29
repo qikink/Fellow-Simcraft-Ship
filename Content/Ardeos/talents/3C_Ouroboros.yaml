@@ -1,0 +1,11 @@
+id: "3C"
+name: Ouroboros
+points: 2
+type: on_dot_tick_cd
+source_dot: SearingBlaze
+owner_only: true          # only extend your own EF/SB
+reduce:
+  - cd: pyromania
+    seconds: .15
+    seconds_crit: .30
+

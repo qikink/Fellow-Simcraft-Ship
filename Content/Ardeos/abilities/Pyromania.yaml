@@ -3,7 +3,7 @@ id: pyromania
 name: Pyromania
 cast: { gcd_s: 0.0, cast_time_s: 0.0 }
 cost: { ember: 0 }
-cooldown_s: 45
+cooldown_s: 90
 off_gcd: true
 pipeline:
   - type: fanout
@@ -22,3 +22,4 @@ pipeline:
         coeff_per_tick: 182
         ember_per_tick: 10
         spirit_per_tick: 0
+        bonus_crit: 0

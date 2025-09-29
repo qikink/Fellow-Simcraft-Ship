@@ -23,6 +23,7 @@ pipeline:
       first_tick: interval
       coeff_per_tick: 19.25
       spirit_per_tick: 0
+      bonus_crit: 0
   - type: resource_gain
     pool: spiritbar
     amount: .33

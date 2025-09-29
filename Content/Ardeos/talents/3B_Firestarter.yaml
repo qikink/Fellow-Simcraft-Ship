@@ -1,0 +1,35 @@
+id: "3B"
+name: Firestarter
+points: 1
+patches:
+  # +20% DoT Crit
+  - ability: apocalypse
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: engulfing_flames
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: fireball
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: fire_frogs
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: pyromania
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: searing_blaze
+    where: { type: dot }
+    op: add
+    field: bonus_crit
+    by: .2

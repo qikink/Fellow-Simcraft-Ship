@@ -1,0 +1,11 @@
+id: "5A"
+name: Ouroboros
+points: 3
+type: on_dot_tick_cd
+source_dot: SearingBlaze
+owner_only: true          # only extend your own EF/SB
+reduce:
+  - cd: engulfing_flames
+    seconds: .5
+    seconds_crit: .5
+

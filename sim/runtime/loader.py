@@ -72,5 +72,6 @@ def start_cast(ctx: Ctx) -> None:
     # At cast end, resolve pipeline and wake APL
     def on_cast_end():
         run_pipeline(ctx, ctx.spec.pipeline)
+        ctx.bus.pub("cast_end", t_us=ctx.eng.t_us, ability_id=ctx.spec.id, caster=ctx.caster)
         ctx.wake_apl()  # <- this wake is what lets us weave off-GCD immediately after casts
     eng.schedule_at(now + cast_us, on_cast_end, phase=CAST_END)

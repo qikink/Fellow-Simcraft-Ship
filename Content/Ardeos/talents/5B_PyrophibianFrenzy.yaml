@@ -1,0 +1,15 @@
+id: "5B"
+name: Pyrophibian Frenzy
+points: 3
+type: on_dot_crit_apply_dot
+sources: ["*"]
+exclude: ["FrogDot"]
+apply:
+  name: FrogDot
+  chance: .08
+  duration_s: 15
+  tick_s: 3.0
+  first_tick: interval
+  coeff_per_tick: 19.25
+  spirit_per_tick: 0
+  bonus_crit: 0

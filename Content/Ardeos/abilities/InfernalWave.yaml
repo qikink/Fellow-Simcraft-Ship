@@ -7,11 +7,18 @@ cost: { ember: 0 }
 pipeline:
   - type: damage
     coeff: 155
-    mods:
-      - type: mult_if_target_has_aura
-        aura: Burn
-        mult: 1.2
-        config_flag: bolt_vs_burn_20p
+  - type: fanout
+    select:
+      count: 100
+      include_primary: false
+      exclude_primary: true
+      require_aura: SearingBlaze
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+      - type: damage
+        name: FlareUpCleave
+        coeff: 0
   - type: resource_gain
     pool: ember
     amount: 40

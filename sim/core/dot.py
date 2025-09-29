@@ -17,11 +17,48 @@ class DotState:
     coeff_per_tick: float
     ember_per_tick: float
     spirit_per_tick: float
+    bonus_crit: float
     preserve_phase_on_refresh: bool = False
     stacks: int = 0
     max_stacks: int = 0           # 0 = no stacking, >0 enables stacking
     stack_mult_per: float = 0.0   # e.g., 0.20 -> +20% per stack
     next_evt: Optional[object] = None
+    expire_evt: Optional[object] = None
+
+    def _remove_now(self):
+        # idempotent removal
+        if self.target.auras.get(self.name) is self:
+            self.target.auras.pop(self.name, None)
+        try:
+            self.owner.active_dots.remove(self)
+        except ValueError:
+            pass
+        if self.next_evt: self.next_evt.cancelled = True
+        if self.expire_evt: self.expire_evt.cancelled = True
+        self.next_evt = None
+        self.expire_evt = None
+
+    def schedule_expire(self):
+        # cancel old, schedule new at current expires_at_us
+        if self.expire_evt:
+            self.expire_evt.cancelled = True
+        eng = self.owner.eng
+        def on_expire(dot=self):
+            # remove only if still the same object and truly expired
+            if dot.target.auras.get(dot.name) is dot and eng.t_us >= dot.expires_at_us:
+                dot._remove_now()
+                print("removing:")
+                print(dot)
+                if(dot.name=="SearingBlaze"):
+                    print("removing a sb")
+                    if dot.target.auras.get("SearingBlazeAmp"):
+                        print("trying to remove an amp")
+                        amp = dot.target.auras.get("SearingBlazeAmp")
+                        print(amp)
+                        amp["stacks"] = 0
+                        dot.target.buffs.pop("SearingBlazeAmp",None)
+                        print(dot.target.buffs)
+        self.expire_evt = eng.schedule_at(self.expires_at_us, on_expire)
 
     def current_tick_interval_us(self) -> int:
         # Effective haste = base factor + additive bonuses.
@@ -30,48 +67,70 @@ class DotState:
         return max(1, int(round(self.base_tick_us / eff_haste)))
 
     def retime(self, now_us: int):
-        if self.next_evt:
-            self.next_evt.cancelled = True;
-            self.next_evt = None
+        # haste changed: recompute next tick time
+        if self.next_evt: self.next_evt.cancelled = True
         I = self.current_tick_interval_us()
         phase0 = self.anchor_us + self.first_delay_us
         k = max(0, (now_us - phase0 + I - 1) // I) + 1
         next_tick = max(now_us, phase0 + k * I)
         if next_tick < self.expires_at_us:
             self.next_evt = self.owner.eng.schedule_at(next_tick, self._tick_cb, phase=DOT_TICK)
+        else:
+            # let expire event handle cleanup
+            self.next_evt = None
 
     def schedule_first_tick(self):
         eng = self.owner.eng
+        self.schedule_expire()  # <-- ensure there is always an up-to-date expire event
         t = max(eng.t_us, self.anchor_us + self.first_delay_us)
         self.next_evt = eng.schedule_at(t, self._tick_cb, phase=DOT_TICK)
 
     def _tick_cb(self):
         eng = self.owner.eng
+
+        if eng.t_us >= self.expires_at_us or getattr(self.target, "is_dead", False):
+            self._remove_now()
+            return
+
         if eng.t_us >= self.expires_at_us or getattr(self.target, "is_dead", False):
             self.next_evt = None
             return
         #publish the event to listeners
-        self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us)
+
 
         # deal damage
         mult = 1.0 + (self.stacks * self.stack_mult_per if self.max_stacks > 0 else 0.0)
+        if self.owner.current_crit()+self.bonus_crit > 1: #grievous crits
+            mult *= ctx.crit_chance()
+
+
+        if self.name == "SearingBlaze":
+            print("trying to amp")
+            amp = self.target.auras.get("SearingBlazeAmp")
+            print(amp)
+            if amp:
+                mult *= 1.0 + amp.get("stacks", 0) * amp.get("per", 0.0)
+
         dmg = self.coeff_per_tick * self.owner.power * mult
-        if self.owner.rng.roll("dot_crit", self.owner.current_crit()):
+        is_crit = False
+        if self.owner.rng.roll("dot_crit", self.owner.current_crit()+self.bonus_crit):
             dmg *= 2.0
+            is_crit = True
         self.owner.add_damage(dmg, self.name)
+        self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us,crit=is_crit)
 
         # gain resources
         if self.ember_per_tick:
-            print(self.ember_per_tick)
             self.owner.ember.gain(self.ember_per_tick)
         if self.spirit_per_tick:
             self.owner.spiritbar.gain(self.spirit_per_tick)
 
-        # schedule next (anchored, no drift)
+        # schedule next anchored tick honoring haste
         I = self.current_tick_interval_us()
         phase0 = self.anchor_us + self.first_delay_us
         k = max(0, (eng.t_us - phase0 + I - 1) // I) + 1
         next_tick = phase0 + k * I
+        # if next tick would land after expiry, let expire event do the cleanup
         if next_tick >= self.expires_at_us:
             self.next_evt = None
             return
@@ -83,9 +142,11 @@ class DotState:
         if not self.preserve_phase_on_refresh:
             self.anchor_us = now_us
             self.first_delay_us = self.current_tick_interval_us()
+        self.schedule_expire()  # <-- reschedule
 
     def add_stacks(self, now_us: int, add: int, new_duration_us: Optional[int] = None):
         if self.max_stacks > 0:
             self.stacks = min(self.max_stacks, self.stacks + add)
         if new_duration_us is not None:
             self.expires_at_us = now_us + new_duration_us
+            self.schedule_expire()  # <-- reschedule

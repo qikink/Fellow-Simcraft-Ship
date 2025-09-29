@@ -114,6 +114,7 @@ class SimpleAPL:
         # Only call choose() when both gates are clear (runner enforces this)
         n = self.count_enemies()
         searing_cov = self.count_aura("SearingBlaze")
+        engulfing_cov = self.count_aura("EngulfingFlames")
         t = self.world.primary() if self.world else None
 
         if now_us < max(p.gcd_ready_us, p.busy_until_us):
@@ -128,13 +129,20 @@ class SimpleAPL:
             self._log_decision(action="apocalypse", reason="Apocalypse Ready", now_us=now_us,target=t.name)
             return ("apocalypse",t)
 
+        # Pyro if many targets without engulfing
+        if self.is_cd_ready("pyromania") and engulfing_cov<=n-3:
+            tgt = self.next_enemy_missing_aura("EngulfingFlames")
+            self._log_decision(action="pyromania", reason="3+ Targets missing Engulfing", now_us=now_us,target=tgt.name)
+            return ("pyromania",tgt)
+
         # Engulfing when available
-        if self.is_cd_ready("engulfing_flames") and t.aura_remains_us("EngulfingFlames", now_us) == 0:
-            self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us,target=t.name)
-            return ("engulfing_flames",t)
+        if self.is_cd_ready("engulfing_flames") and engulfing_cov<n:
+            tgt = self.next_enemy_missing_aura("EngulfingFlames")
+            self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us,target=tgt.name)
+            return ("engulfing_flames",tgt)
 
         # Pyromania if Engulfing not available & Engulfing not present
-        if self.is_cd_ready("pyromania") and t.aura_remains_us("EngulfingFlames", now_us) == 0:
+        if self.is_cd_ready("pyromania") and engulfing_cov<n:
             self._log_decision(action="pyromania", reason="Pyromania Ready & Engulfing Not Present", now_us=now_us,target=t.name)
             return ("pyromania",t)
 
@@ -168,6 +176,12 @@ class SimpleAPL:
         if p.ember.cur >= 100 and t.aura_remains_us("EngulfingFlames", now_us) > 0:
             self._log_decision(action="detonate", reason="Embers Available & Engulfing Present", now_us=now_us,target=t.name)
             return ("detonate",t)
+
+        print("Fireball Charges:")
+        print(self.player.charges.get("fireball").cur)
+        if self.player.charges.get("fireball").cur==2:
+            self._log_decision(action="fireball", reason="Fireball Charges Capped", now_us=now_us,target=t.name)
+            return ("fireball",t)
 
         # Infernal Wave filler
         self._log_decision(action="infernal_wave", reason="No Other Actions Available", now_us=now_us,target=t.name)
