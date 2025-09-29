@@ -1,8 +1,8 @@
 from sim.core.apl import SimpleAPL  # reuse your APL class
-def make_apl(player, target, world, helpers):
+def make_apl(player, target, world, talents, helpers):
     # Wire helpers into your SimpleAPL constructor as you already do
     apl =  SimpleAPL(
-        player, target, world,
+        player, target, world, talents,
         is_cd_ready=helpers["is_cd_ready"],
         is_off_gcd=helpers["is_off_gcd"],
         time_until_ready_us=helpers["time_until_ready_us"],

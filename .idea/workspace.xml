@@ -4,43 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogSingle.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/2B_FlareUp.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/3A_AgonizingBlaze.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/3B_Firestarter.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/3C_Ouroboros.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/4A_FieryResilience.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/4B_CracklingInferno.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/4C_MagicWard.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5A_RollingFlames.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5B_PyrophibianFrenzy.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5C_ReignOfFire.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/6A_IntensifyingInferno.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/6B_SpiritedFortitude.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sim/runtime/ppm.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sim/runtime/scratch.txt" afterDir="false" />
+    <list default="true" id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="Missing Talent File">
+      <change afterPath="$PROJECT_DIR$/Content/Ardeos/talents/6C_SpontaneousCombusion.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/Fellow-Simcraft-Ship.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Fellow-Simcraft-Ship.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Apocalypse.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Apocalypse.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/EngulfingFlames.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/EngulfingFlames.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogs.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogs.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Fireball.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Fireball.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/InfernalWave.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/InfernalWave.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Pyromania.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Pyromania.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/SearingBlaze.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/SearingBlaze.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/FlickeringCinders.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/2A_FlickeringCinders.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/GreatBallsofFire.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/1C_GreatBallsofFire.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/SlowBurn.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/1A_SlowBurn.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/UndyingFlame.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/2C_UndyingFlame.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_me.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_me.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Ardeos/apl.py" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/apl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/5C_ReignOfFire.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5C_ReignOfFire.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sim/core/apl.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/core/apl.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sim/core/dot.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/core/dot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/core/unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/core/unit.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sim/runners/target_dummy.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runners/target_dummy.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sim/runtime/components.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/components.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/runtime/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sim/runtime/pack.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/pack.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sim/runtime/talents.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/talents.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -78,28 +54,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Python.apl.executor&quot;: &quot;Run&quot;,
-    &quot;Python.run_me.executor&quot;: &quot;Run&quot;,
-    &quot;Python.target_dummy.executor&quot;: &quot;Run&quot;,
-    &quot;Python.unit.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/qikin/PycharmProjects/Fellow-Simcraft-Ship/Content/Rime&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Python.apl.executor": "Run",
+    "Python.dot.executor": "Run",
+    "Python.run_me.executor": "Run",
+    "Python.target_dummy.executor": "Run",
+    "Python.unit.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/qikin/PycharmProjects/Fellow-Simcraft-Ship/Content/Rime",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\qikin\PycharmProjects\Fellow-Simcraft-Ship\Content\Rime" />
@@ -113,34 +92,10 @@
       <recent name="C:\Users\qikink-rig\PycharmProjects\Fellow-Simcraft-Ship\sim" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="Fellow-Simcraft-Ship" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9c94529fcfe0-JavaScript-PY-252.26199.168" />
         <option value="bundled-python-sdk-b3d66beaba9a-c6efb3732140-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26199.168" />
       </set>
     </attachedChunks>
@@ -155,19 +110,29 @@
       <workItem from="1758988948025" duration="16910000" />
       <workItem from="1759029772888" duration="11565000" />
     </task>
+    <task id="LOCAL-00001" summary="Missing Talent File">
+      <option name="closed" value="true" />
+      <created>1759120657492</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1759120657492</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Initial Project Checking" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial Project Checking" />
+    <MESSAGE value="Missing Talent File" />
+    <option name="LAST_COMMIT_MESSAGE" value="Missing Talent File" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$unit.coverage" NAME="unit Coverage Results" MODIFIED="1758992629996" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
-    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$run_me.coverage" NAME="run_me Coverage Results" MODIFIED="1759110439240" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$apl.coverage" NAME="apl Coverage Results" MODIFIED="1759082431636" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$apl.coverage" NAME="apl Coverage Results" MODIFIED="1758997445089" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$dot.coverage" NAME="dot Coverage Results" MODIFIED="1759125666317" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$target_dummy.coverage" NAME="target_dummy Coverage Results" MODIFIED="1758995002647" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/runners" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$run_me.coverage" NAME="run_me Coverage Results" MODIFIED="1759127496807" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

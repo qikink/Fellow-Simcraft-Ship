@@ -35,7 +35,7 @@ def load_character_spec(content_root: str, char_id: str) -> CharacterSpec:
         },
     )
 
-def load_apl_factory(apl_path: str) -> Callable[..., Any]:
+def load_apl_factory(apl_path: str,talents) -> Callable[..., Any]:
     spec = importlib.util.spec_from_file_location("char_apl", apl_path)
     mod = importlib.util.module_from_spec(spec)
     assert spec and spec.loader, f"Cannot load APL at {apl_path}"

@@ -1,0 +1,8 @@
+id: "6C"
+name: Spontaneous Combustion
+points: 1
+type: on_dot_pre_tick_force_crit
+dots: ["SearingBlaze", "EngulfingFlames"]
+owner_only: true
+base_chance: 0.04         # 4%
+base_crit_scale: 0.20     # +20% of player's base crit

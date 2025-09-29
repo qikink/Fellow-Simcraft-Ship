@@ -21,10 +21,10 @@ class SimConfig:
     haste: float = 1.0
     base_crit: float = 0.05
     base_spirit_gain: float = 1.0
-    talents: Dict[str, bool] = None          # e.g., {"bolt_vs_burn_20p": True}
+    talents: Dict[str, bool] = None          # e.g., {"2A": True}
     seed: int = 1337
     character: str = "Ardeos"
-    encounter: list[tuple[float,int]] | None = None   # NEW, e.g. [(0,1),(15,3),(30,1)]
+    encounter: list[tuple[float,int]] | None = None   # e.g. [(0,1),(15,3),(30,1)]
 
 
 
@@ -32,7 +32,7 @@ def run_sim(content_dir: str, cfg: SimConfig):
     eng, bus = Engine(), Bus()
     rng = RNG(cfg.seed)
     pack = load_character_spec(content_dir, cfg.character)
-    make_apl = load_apl_factory(pack.paths["apl"])
+    make_apl = load_apl_factory(pack.paths["apl"],talents=cfg.talents)
 
     world = World(eng, bus, rng)
     schedule_encounter(world, cfg.encounter or [(0, 1)])  # default: 1 target full sim
@@ -123,7 +123,7 @@ def run_sim(content_dir: str, cfg: SimConfig):
                 return u
         return world.primary()  # fallback
 
-    apl = make_apl(player, target, world, helpers={
+    apl = make_apl(player, target, world, cfg.talents, helpers={
         "is_cd_ready": is_cd_ready,
         "is_off_gcd": is_off_gcd,
         "time_until_ready_us": time_until_ready_us,

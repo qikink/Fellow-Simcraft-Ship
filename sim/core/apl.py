@@ -7,7 +7,7 @@ class SimpleAPL:
     Priority:
     """
 
-    def __init__(self, player, target, world, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "all", logger=None, bus=None):
+    def __init__(self, player, target, world, talents, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "all", logger=None, bus=None):
         """
         debug: "off" | "unique" | "all"
           - "unique": log only when the chosen action differs from the previous decision (default)
@@ -26,6 +26,7 @@ class SimpleAPL:
         self._last_action = None
         self.is_off_gcd = is_off_gcd
         self.time_until_ready_us = time_until_ready_us
+        self.talents = talents
 
     def _log_decision(self, *, action: str, reason: str, now_us: int,target: str=""):
         if self.debug == "off":
@@ -116,7 +117,6 @@ class SimpleAPL:
         searing_cov = self.count_aura("SearingBlaze")
         engulfing_cov = self.count_aura("EngulfingFlames")
         t = self.world.primary() if self.world else None
-
         if now_us < max(p.gcd_ready_us, p.busy_until_us):
             return None
 
@@ -128,6 +128,10 @@ class SimpleAPL:
         if self.is_cd_ready("apocalypse"):
             self._log_decision(action="apocalypse", reason="Apocalypse Ready", now_us=now_us,target=t.name)
             return ("apocalypse",t)
+
+        if t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(2.5) and "3A" in self.talents:
+            self._log_decision(action="searing_blaze", reason="Overlap Searing Blaze for Intensifying", now_us=now_us, target=t.name)
+            return ("searing_blaze",t)
 
         # Pyro if many targets without engulfing
         if self.is_cd_ready("pyromania") and engulfing_cov<=n-3:
@@ -177,8 +181,6 @@ class SimpleAPL:
             self._log_decision(action="detonate", reason="Embers Available & Engulfing Present", now_us=now_us,target=t.name)
             return ("detonate",t)
 
-        print("Fireball Charges:")
-        print(self.player.charges.get("fireball").cur)
         if self.player.charges.get("fireball").cur==2:
             self._log_decision(action="fireball", reason="Fireball Charges Capped", now_us=now_us,target=t.name)
             return ("fireball",t)

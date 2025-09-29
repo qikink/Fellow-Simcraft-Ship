@@ -385,7 +385,10 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         def _bump(target, now_us, owner):
             # store stacks on the TARGET as a light “aura” dict
             a = target.auras.get(aura_name)
+            print("bumping!")
+            print(a)
             if not a:
+                print("it's a new a!")
                 a = target.auras[aura_name] = {"stacks": 0, "per": per_stack, "max": max_stacks, "owner": owner}
             if owner_only and a.get("owner") is not owner:
                 # if some other player's aura exists, either ignore or replace; we’ll ignore
@@ -405,5 +408,30 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
 
 
         bus.sub("dot_tick", on_tick)
+
+    for t in talents:
+        if t.get("type") != "on_dot_pre_tick_force_crit":
+            continue
+
+        dots = set(t.get("dots", []))  # e.g., {"SearingBlaze","EngulfingFlames"}
+        owner_only = bool(t.get("owner_only", True))
+        base_chance = float(t.get("base_chance", 0.04))  # 4%
+        scale_factor = float(t.get("base_crit_scale", 0.20))  # +20% of base crit
+        print("Registering a pretick critter")
+        print(dots,base_chance, scale_factor)
+        def on_pre_tick(dot=None, t_us=None, **_):
+            if dot is None:
+                return
+            if dots and dot.name not in dots:
+                return
+            if owner_only and dot.owner is not player:
+                return
+            p = base_chance + scale_factor * float(getattr(player, "base_crit", 0.0))
+            p = max(0.0, min(1.0, p))
+            if player.rng.roll(f"precrit:{t.get('id', '?')}", p):
+                setattr(dot, "_force_crit_tick", True)
+
+        bus.sub("dot_pre_tick", on_pre_tick)
+        detachers.append(lambda: None)
 
     return detachers

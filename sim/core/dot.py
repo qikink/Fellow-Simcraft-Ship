@@ -18,7 +18,8 @@ class DotState:
     ember_per_tick: float
     spirit_per_tick: float
     bonus_crit: float
-    preserve_phase_on_refresh: bool = False
+    preserve_phase_on_refresh: bool = False #assume you will "dot clip"
+    refresh_overlap: float = 0.0 #assume no pandemic
     stacks: int = 0
     max_stacks: int = 0           # 0 = no stacking, >0 enables stacking
     stack_mult_per: float = 0.0   # e.g., 0.20 -> +20% per stack
@@ -95,25 +96,31 @@ class DotState:
         if eng.t_us >= self.expires_at_us or getattr(self.target, "is_dead", False):
             self.next_evt = None
             return
-        #publish the event to listeners
+        #publish the pre-event to listeners who may modify it
+        self.owner.bus.pub("dot_pre_tick", dot=self, t_us=eng.t_us)
 
+        temp_bonus_crit = 0
+        if getattr(self, "_force_crit_tick", False):
+            temp_bonus_crit = 1
+
+        if hasattr(self, "_force_crit_tick"):
+            delattr(self, "_force_crit_tick")
 
         # deal damage
         mult = 1.0 + (self.stacks * self.stack_mult_per if self.max_stacks > 0 else 0.0)
-        if self.owner.current_crit()+self.bonus_crit > 1: #grievous crits
-            mult *= ctx.crit_chance()
+        if self.owner.current_crit()+self.bonus_crit+temp_bonus_crit > 1: #grievous crits
+            mult *= (self.owner.current_crit()+self.bonus_crit+temp_bonus_crit)
 
 
         if self.name == "SearingBlaze":
-            print("trying to amp")
             amp = self.target.auras.get("SearingBlazeAmp")
             print(amp)
             if amp:
-                mult *= 1.0 + amp.get("stacks", 0) * amp.get("per", 0.0)
+                mult *= (1.0 + amp.get("stacks", 0) * amp.get("per", 0.0))
 
         dmg = self.coeff_per_tick * self.owner.power * mult
         is_crit = False
-        if self.owner.rng.roll("dot_crit", self.owner.current_crit()+self.bonus_crit):
+        if self.owner.rng.roll("dot_crit", self.owner.current_crit()+self.bonus_crit+temp_bonus_crit):
             dmg *= 2.0
             is_crit = True
         self.owner.add_damage(dmg, self.name)

@@ -180,6 +180,8 @@ def comp_dot(ctx: Ctx, step: dict):
     ember_per_tick = float(step.get("ember_per_tick", 0))
     spirit_per_tick = float(step.get("spirit_per_tick", 0))
     bonus_crit = float(step.get("bonus_crit", 0.0))
+    preserve_phase_on_refresh = bool(step.get("preserve_phase_on_refresh", False))
+    refresh_overlap = float(step.get("refresh_overlap", 0.0))
     first = step.get("first_tick", "interval")  # "interval" or 0
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste))) if first == "interval" else 0
 
@@ -193,7 +195,8 @@ def comp_dot(ctx: Ctx, step: dict):
             base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
             ember_per_tick=ember_per_tick, spirit_per_tick=spirit_per_tick,
             bonus_crit = bonus_crit,
-            preserve_phase_on_refresh=False
+            preserve_phase_on_refresh=preserve_phase_on_refresh,
+            refresh_overlap=refresh_overlap,
         )
         ctx.target.auras[name] = dot
         ctx.caster.active_dots.append(dot)        # <-- track ownership
@@ -207,7 +210,11 @@ def comp_dot(ctx: Ctx, step: dict):
                     ctx.caster.active_dots.remove(dot)
         ctx.eng.schedule_at(dot.expires_at_us, on_expire)
     else:
-        dot.refresh(now, dur_us)
+        overlap_dur = 0
+        if dot.refresh_overlap > 0:
+            remaining_dur_us = dot.expires_at_us - now
+            overlap_dur = max(0,min(remaining_dur_us,dot.base_duration_us*dot.refresh_overlap)) #pandemic if applicable
+        dot.refresh(now, dur_us+overlap_dur)
 
 @component("apply_buff")
 def comp_apply_buff(ctx: Ctx, step: dict):
