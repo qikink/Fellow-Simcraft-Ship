@@ -2,7 +2,7 @@ id: engulfing_flames
 name: "Engulfing Flames"
 tags: [dot]
 cooldown_s: 20
-cast: { gcd_s: 1.0, cast_time_s: 2.0 }
+cast: { gcd_s: 1.5, cast_time_s: 1.5 }
 cost: { ember: 0 }
 pipeline:
   - type: dot
@@ -16,4 +16,4 @@ pipeline:
     bonus_crit: 0
   - type: resource_gain
     pool: spiritbar
-    amount: .6
+    amount: .4

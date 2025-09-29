@@ -136,34 +136,37 @@ if __name__ == "__main__":
     # Example usage; adjust paths and values to your repo
     req = BatchRequest(
         content_dir="content",  # root of your character packs
-        attrs=Attrs(name="Ardeos", power=1.0, haste=1.05, base_crit=.05,base_spirit_gain=1.05),
+        attrs=Attrs(name="Ardeos", power=1.0, haste=1.1, base_crit=.4,base_spirit_gain=1.1),
         talent_sets=[
-            {"1A": True},
-            {"1B": True},
-            {"1C": True},
-            {"2A": True},
-            {"2B": True},
-            {"2C": True},
-            {"3A": True},
-            {"3B": True},
-            {"3C": True},
-            {"4A": True},
-            {"4B": True},
-            {"4C": True},
-            {"5A": True},
-            {"5B": True},
-            {"5C": True},
-            {"6A": True},
-            {"6B": True},
-            {"6C": True},
+            {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
+            {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },
+            {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
+            {"1C": True, "2C": True, "3A": True, "3B":True,"4B": True}
         ],
         schedules=[
             [(0, 1)],                            # pure ST
             [(0, 3)],          # cleave
+            [(0,3),(30,1),(45,8),(75,3),(100,5),(130,1),(145,8),(175,3),(200,5),(230,1)] #"dungeon slice" (oof)
         ],
-        run_count=10,
+        run_count=50,
         duration_s=300.0,
         base_seed=1337,
     )
     rows = run_batch(req)
     print_table(rows)
+
+    #top contenders
+    # {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},{"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },{"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True}
+
+    #reasonable builds
+    #{"1C":True,"2C":True,"3A":True,"3B":True,"6A":True,},{"1C":True,"2C":True,"3B":True,"5C":True}
+    #more reasonable builds
+    #{"1C": True, "2C": True, "3A": True, "3B": True, "6A": True, }, {"1C": True, "2C": True, "3B": True, "5C": True}, {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, }, {"1C": True, "2C": True, "3B": True, "4B": True,"6A": True, "6C": True}
+    #all singletons
+    #{"1A": True},{"1B": True},{"1C": True},{"2A": True},{"2B": True},{"2C": True},{"3A": True},{"3B": True},{"3C": True},{"4A": True},{"4B": True},{"4C": True},{"5A": True},{"5B": True},{"5C": True},{"6A": True},{"6B": True},{"6C": True}
+    #test bucket
+    #{"1C": True},{"6C": True},{"1A": True},{"2A": True},{"4B": True},{"5A": True},{"5B": True},{"5C": True},{"6C": True}
+#All singletons
+#            {"1A": True}, {"1B": True}, {"1C": True}, {"2A": True}, {"2B": True}, {"2C": True}, {"3A": True},
+           # {"3B": True}, {"3C": True}, {"4A": True}, {"4B": True}, {"4C": True}, {"5A": True}, {"5B": True},
+           # {"5C": True}, {"6A": True}, {"6B": True}, {"6C": True}

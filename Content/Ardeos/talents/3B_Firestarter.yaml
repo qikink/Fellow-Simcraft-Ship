@@ -34,7 +34,7 @@ patches:
     field: fixed_crit
     to: 0.2
   - ability: fireball
-    where: { type: dot}
+    where: { type: dot_from_last_hit}
     op: set
     field: fixed_crit
     to: 0.2

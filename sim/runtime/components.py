@@ -358,6 +358,8 @@ def comp_dot_from_last_hit(ctx: Ctx, step: dict):
     base_tick_s = float(step.get("tick_s", 1.0))
     pct         = float(step.get("percent_of_hit", 0.60))
     bonus_crit = float(step.get("bonus_crit", 0.0))
+    ember_per_tick = float(step.get("ember_per_tick", 0.0))
+    fixed_crit = float(step.get("fixed_crit", -1.0))
     first_mode  = step.get("first_tick", "interval")
 
     # effective tick period under current DoT haste model
@@ -380,8 +382,9 @@ def comp_dot_from_last_hit(ctx: Ctx, step: dict):
         anchor_us=now, first_delay_us=first_delay_us,
         base_duration_us=dur_us, expires_at_us=now + dur_us,
         base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
-        ember_per_tick=0, preserve_phase_on_refresh=True,
+        ember_per_tick=ember_per_tick, preserve_phase_on_refresh=True,
         spirit_per_tick=0,bonus_crit=bonus_crit,
+        fixed_crit=fixed_crit,
     )
     # tag for analytics if you want
     dot.src_ability_id = ctx.vars.get("last_hit_ability", ctx.spec.id)

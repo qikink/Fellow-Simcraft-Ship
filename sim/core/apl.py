@@ -120,12 +120,25 @@ class SimpleAPL:
         if now_us < max(p.gcd_ready_us, p.busy_until_us):
             return None
 
-        # Snap
-        if p.ember.cur >= 450:
-            self._log_decision(action="detonate", reason="Prevent Ember Overcap", now_us=now_us,target=t.name)
-            return ("detonate",t)
+        tt_fireball = us_to_s(self.time_until_ready_us("fireball"))
+        tt_pyromania = us_to_s(self.time_until_ready_us("pyromania"))
+        tt_engulfing_flames = us_to_s(self.time_until_ready_us("engulfing_flames"))
+        tt_frogs = us_to_s(self.time_until_ready_us("fire_frogs"))
+        tt_wildfire = us_to_s(self.time_until_ready_us("wildfire"))
 
-        if self.is_cd_ready("apocalypse"):
+        tt_engulfing_eff = min(tt_engulfing_flames,tt_pyromania)
+        est_ramp = (100 - self.player.spiritbar.cur) * 1.5
+        est_ramp_us = s_to_us(est_ramp + 1.5)
+
+        delay_fireball = max(0, min(est_ramp_us - t.aura_remains_us("Fireball", now_us), tt_fireball - est_ramp_us))
+        delay_engulfing = max(0,min(est_ramp_us - t.aura_remains_us("Engulfing", now_us), tt_engulfing_eff - est_ramp_us))
+        delay_frogs = max(0, min(est_ramp_us - t.aura_remains_us("FrogDot", now_us), tt_frogs - est_ramp_us))
+        delay_wildfire = max(0, tt_wildfire - 9)
+        true_est_ramp = us_to_s(max(est_ramp_us, delay_fireball, delay_engulfing, delay_frogs, delay_wildfire)) #compute likely incinerate time, pool cd's if approaching
+
+        #print("Estimating ",true_est_ramp," till Incinerate.")
+        #print("FB:",delay_fireball,"eng:",delay_engulfing,"frogs:",delay_frogs,"wildfire:",delay_wildfire)
+        if self.is_cd_ready("apocalypse") and n>1: #only apocalypse in AoE
             self._log_decision(action="apocalypse", reason="Apocalypse Ready", now_us=now_us,target=t.name)
             return ("apocalypse",t)
 
@@ -133,29 +146,70 @@ class SimpleAPL:
             self._log_decision(action="searing_blaze", reason="Overlap Searing Blaze for Intensifying", now_us=now_us, target=t.name)
             return ("searing_blaze",t)
 
+        #ramp rotation:
+        if true_est_ramp<=4.5:
+            if t.aura_remains_us("SearingBlaze", now_us) >= s_to_us(1) and t.aura_remains_us("FrogDot",now_us) >= s_to_us(1) and t.aura_remains_us("Fireball", now_us) >= s_to_us(1) and t.aura_remains_us("EngulfingFlames",now_us) >= s_to_us(1) and (self.player.spiritbar.cur >= 100):
+                self._log_decision(action="incinerate", reason="Fully Ramped Incinerate",
+                                   now_us=now_us, target=t.name)
+                return ("incinerate", t)
+
+            if t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(6):
+                self._log_decision(action="searing_blaze", reason="Refresh Searing in Ramp",now_us=now_us, target=t.name)
+                return ("searing_blaze", t)
+
+            if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) <= s_to_us(4):
+                self._log_decision(action="fireball", reason="Fireball in Ramp", now_us=now_us,
+                                   target=t.name)
+                return ("fireball", t)
+
+            if self.is_cd_ready("fire_frogs"):
+                self._log_decision(action="fire_frogs", reason="Frogs in Ramp", now_us=now_us, target=t.name)
+                return ("fire_frogs", t)
+
+            if self.is_cd_ready("engulfing_flames") and engulfing_cov < n:
+                tgt = self.next_enemy_missing_aura("EngulfingFlames")
+                self._log_decision(action="engulfing_flames", reason="Engulfing in Ramp", now_us=now_us,
+                                   target=tgt.name)
+                return ("engulfing_flames", tgt)
+
+            if self.is_cd_ready("pyromania") and engulfing_cov < n:
+                tgt = self.next_enemy_missing_aura("EngulfingFlames")
+                self._log_decision(action="pyromania", reason="Engulfing (via Pyro) in Ramp", now_us=now_us,
+                                   target=tgt.name)
+                return ("pyromania", tgt)
+
+            if p.ember.cur >= 150:
+                self._log_decision(action="detonate", reason="Aggressive Detonate in Ramp", now_us=now_us,
+                                   target=t.name)
+                return ("detonate", t)
+
+            self._log_decision(action="infernal_wave", reason="Fill in Ramp", now_us=now_us,
+                               target=t.name)  # may need to wait 1-2 gcd's for all cooldowns to become available, or for spirit to charge
+            return ("infernal_wave", t)
+
         # Pyro if many targets without engulfing
-        if self.is_cd_ready("pyromania") and engulfing_cov<=n-3:
+        if self.is_cd_ready("pyromania") and engulfing_cov<=n-3 and tt_engulfing_flames <= true_est_ramp+10:
             tgt = self.next_enemy_missing_aura("EngulfingFlames")
             self._log_decision(action="pyromania", reason="3+ Targets missing Engulfing", now_us=now_us,target=tgt.name)
             return ("pyromania",tgt)
 
         # Engulfing when available
-        if self.is_cd_ready("engulfing_flames") and engulfing_cov<n:
+        if self.is_cd_ready("engulfing_flames") and engulfing_cov<n and (tt_pyromania <= true_est_ramp or 20 <= true_est_ramp+8):
             tgt = self.next_enemy_missing_aura("EngulfingFlames")
             self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us,target=tgt.name)
             return ("engulfing_flames",tgt)
 
         # Pyromania if Engulfing not available & Engulfing not present
-        if self.is_cd_ready("pyromania") and engulfing_cov<n:
+        if self.is_cd_ready("pyromania") and engulfing_cov<n and tt_engulfing_flames <= true_est_ramp:
             self._log_decision(action="pyromania", reason="Pyromania Ready & Engulfing Not Present", now_us=now_us,target=t.name)
             return ("pyromania",t)
 
         # Fireball when available and not already present
-        if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) == 0:
+        if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) == 0 and 30 <= true_est_ramp+10:
             self._log_decision(action="fireball", reason="Fireball Ready & Not Present", now_us=now_us,target=t.name)
             return ("fireball",t)
 
-        if self.is_cd_ready("fire_frogs"):
+        if self.is_cd_ready("fire_frogs") and 60 <= true_est_ramp+15:
             self._log_decision(action="fire_frogs", reason="Frogs Ready", now_us=now_us,target=t.name)
             return ("fire_frogs",t)
 
@@ -165,20 +219,18 @@ class SimpleAPL:
             self._log_decision(action="searing_blaze", reason="Searing Blaze Not Present", now_us=now_us, target=tgt.name)
             return ("searing_blaze",tgt)
 
-        if self.is_cd_ready("incinerate") and (self.player.spiritbar.cur >= 96) and (self.player.ember.cur > 200):
-            self._log_decision(action="detonate", reason="Spending Down to Incinerate", now_us=now_us,target=t.name)
-            return ("detonate",t)
 
-        if self.is_cd_ready("incinerate") and (self.player.spiritbar.cur >= 100) and (self.player.ember.cur <= 200):
-            self._log_decision(action="incinerate", reason="Spirit Charged & Embers Low Enough", now_us=now_us,target=t.name)
-            return ("incinerate",t)
+        if t.aura_remains_us("SearingBlaze", now_us) >= s_to_us(1) and t.aura_remains_us("FrogDot", now_us) >= s_to_us(1) and t.aura_remains_us("Fireball", now_us) >= s_to_us(1) and t.aura_remains_us("EngulfingFlames",now_us) >= s_to_us(1) and (self.player.spiritbar.cur >= 100):
+            self._log_decision(action="incinerate", reason="Fully Ramped Incinerate",
+                               now_us=now_us, target=t.name)
+            return ("incinerate", t)
 
-        if self.is_cd_ready("wildfire") and not p.has_buff("Wildfire") and t.aura_remains_us("EngulfingFlames", now_us) >= 3:
+        if self.is_cd_ready("wildfire") and not p.has_buff("Wildfire") and t.aura_remains_us("EngulfingFlames", now_us) >= 3 and 45<= true_est_ramp+10:
             self._log_decision(action="wildfire", reason="Wildfire ready & Engulfing Active", now_us=now_us,target=t.name)
             return ("wildfire",None)
 
-        if p.ember.cur >= 100 and t.aura_remains_us("EngulfingFlames", now_us) > 0:
-            self._log_decision(action="detonate", reason="Embers Available & Engulfing Present", now_us=now_us,target=t.name)
+        if p.ember.cur >= 100 and (t.aura_remains_us("EngulfingFlames", now_us) > 0 or t.aura_remains_us("Fireball", now_us) > 0 or t.aura_remains_us("FrogDot", now_us) > 0):
+            self._log_decision(action="detonate", reason="Embers Available & DoT(s) Present", now_us=now_us,target=t.name)
             return ("detonate",t)
 
         if self.player.charges.get("fireball").cur==2:

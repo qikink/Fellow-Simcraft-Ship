@@ -97,3 +97,85 @@ above:
                         else:
                             if warn_no_match:
                                 print(f"[talents] warn: unknown op '{op}' in talent {t.get('id')}")
+
+
+
+
+ if self.player.spiritbar.cur >= 85: #different APL as we approach/reach max spirit gauge
+            print("CDs - FB: ", tt_fireball, " Pyro: ", tt_pyromania, " Engulf: ", tt_engulfing_flames, " Wildfire: ",
+                  tt_wildfire, " Frogs: ", tt_frogs)
+            est_ramp = (100-self.player.spiritbar.cur)*1.5
+            est_ramp_us = s_to_us(est_ramp+1.5)
+
+            delay_fireball = max(0,min(est_ramp_us-t.aura_remains_us("Fireball", now_us),tt_fireball-est_ramp_us))
+            delay_engulfing = max(0,min(est_ramp_us-t.aura_remains_us("Engulfing", now_us),tt_engulfing_eff-est_ramp_us))
+            delay_frogs = max(0,min(est_ramp_us-t.aura_remains_us("FrogDot", now_us),tt_frogs-est_ramp_us))
+            delay_wildfire = max(0,tt_wildfire-9)
+            true_est_ramp = max(est_ramp_us,delay_fireball,delay_engulfing,delay_frogs,delay_wildfire)
+            #if (tt_fireball < max(4.5,est_ramp) or t.aura_remains_us("Fireball", now_us)>=est_ramp_us) and (tt_engulfing_eff < max(4.5,est_ramp) or t.aura_remains_us("EngulfingFlames", now_us)>=est_ramp_us) and (tt_frogs < max(4.5,est_ramp) or tt_frogs>30 or t.aura_remains_us("FrogDot", now_us)>=est_ramp_us) and (tt_wildfire < 9 or tt_wildfire > 30) and self.player.spiritbar.cur>=97:#ready to start ramping
+            if true_est_ramp<=4.5:
+                if t.aura_remains_us("SearingBlaze", now_us) >= s_to_us(1) and t.aura_remains_us("FrogDot", now_us) >= s_to_us(1) and t.aura_remains_us("Fireball", now_us) >= s_to_us(1) and t.aura_remains_us("EngulfingFlames", now_us) >= s_to_us(1) and (self.player.spiritbar.cur >= 100):
+                    self._log_decision(action="incinerate", reason="Fully Ramped Incinerate",
+                                       now_us=now_us, target=t.name)
+                    return ("incinerate", t)
+
+                if t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(6):
+                    self._log_decision(action="searing_blaze", reason="Refresh Searing in Ramp",
+                                       now_us=now_us, target=t.name)
+                    return ("searing_blaze", t)
+
+                if self.is_cd_ready("fireball") and  t.aura_remains_us("Fireball", now_us) <= s_to_us(4):
+                    self._log_decision(action="fireball", reason="Fireball in Ramp", now_us=now_us,
+                                       target=t.name)
+                    return ("fireball", t)
+
+                if self.is_cd_ready("fire_frogs"):
+                    self._log_decision(action="fire_frogs", reason="Frogs in Ramp", now_us=now_us, target=t.name)
+                    return ("fire_frogs", t)
+
+                if self.is_cd_ready("engulfing_flames") and engulfing_cov<n:
+                    tgt = self.next_enemy_missing_aura("EngulfingFlames")
+                    self._log_decision(action="engulfing_flames", reason="Engulfing in Ramp", now_us=now_us,target=tgt.name)
+                    return ("engulfing_flames",tgt)
+
+                if self.is_cd_ready("pyromania") and engulfing_cov<n:
+                    tgt = self.next_enemy_missing_aura("EngulfingFlames")
+                    self._log_decision(action="pyromania", reason="Engulfing (via Pyro) in Ramp", now_us=now_us,target=tgt.name)
+                    return ("pyromania",tgt)
+
+                if p.ember.cur >= 150:
+                    self._log_decision(action="detonate", reason="Aggressive Detonate in Ramp", now_us=now_us, target=t.name)
+                    return ("detonate", t)
+
+                self._log_decision(action="infernal_wave", reason="Fill in Ramp", now_us=now_us,
+                                   target=t.name) #may need to wait 1-2 gcd's for all cooldowns to become available, or for spirit to charge
+                return ("infernal_wave", t)
+
+
+            else: #cooldowns not ready, or spirit too low, to start ramping
+                #pooling phase, low resource spend
+                est_pool = (97-self.player.spiritbar.cur)*2.5,
+                print("Estimating ",us_to_s(true_est_ramp)-4.5," of pooling")
+                if self.player.charges.get("fireball").cur == 2:
+                    self._log_decision(action="fireball", reason="Fireball Charges Capped in Pooling", now_us=now_us,
+                                       target=t.name)
+                    return ("fireball", t)
+
+                if tt_engulfing_flames <= 4.5 and self.is_cd_ready("pyromania") and engulfing_cov<n:#free to pyromania if we have engulfing coming back
+                    tgt = self.next_enemy_missing_aura("EngulfingFlames")
+                    self._log_decision(action="pyromania", reason="Pyromania during Pooling", now_us=now_us,
+                                       target=tgt.name)
+                    return ("pyromania", tgt)
+
+                if t.aura_remains_us("SearingBlaze", now_us) <= s_to_us(6):
+                    self._log_decision(action="searing_blaze", reason="Refresh Searing in Pooling",
+                                       now_us=now_us, target=t.name)
+                    return ("searing_blaze", t)
+
+                if p.ember.cur >= 150 and (t.aura_remains_us("Fireball", now_us) > 0 or t.aura_remains_us("EngulfingFlames", now_us) > 0 or t.aura_remains_us("FrogDot", now_us) > 0):#snap, if that's better than a wave
+                    self._log_decision(action="detonate", reason="Aggressive Detonate in Pooling", now_us=now_us, target=t.name)
+                    return ("detonate", t)
+
+                self._log_decision(action="infernal_wave", reason="Fill in Pooling", now_us=now_us,
+                                   target=t.name) #may need to wait 1-2 gcd's for all cooldowns to become available, or for spirit to charge
+                return ("infernal_wave", t)

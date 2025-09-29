@@ -88,7 +88,7 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
     """
     warn_no_match = True
     for t in talents: #do behavior changing talents
-        print(t)
+        #print(t)
         tid = t.get("id", "?")
         for p in (t.get("patches") or []):
             ab_field = p["ability"]
