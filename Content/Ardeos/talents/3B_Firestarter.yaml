@@ -13,16 +13,6 @@ patches:
     op: add
     field: bonus_crit
     by: .2
-  - ability: fireball
-    where: { type: dot }
-    op: add
-    field: bonus_crit
-    by: .2
-  - ability: fire_frogs
-    where: { type: dot }
-    op: add
-    field: bonus_crit
-    by: .2
   - ability: pyromania
     where: { type: dot }
     op: add
@@ -33,3 +23,18 @@ patches:
     op: add
     field: bonus_crit
     by: .2
+  - ability: infernal_wave
+    where: { type: dot_from_last_hit }
+    op: add
+    field: bonus_crit
+    by: .2
+  - ability: fire_frogs
+    where: { type: dot}
+    op: set
+    field: fixed_crit
+    to: 0.2
+  - ability: fireball
+    where: { type: dot}
+    op: set
+    field: fixed_crit
+    to: 0.2

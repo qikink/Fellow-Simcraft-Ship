@@ -8,11 +8,11 @@ cost: { ember: 0 }
 pipeline:
   - type: fanout
     select:
-      count: 100
+      count: 5
       include_primary: true
       prefer_missing_aura: none
       owner_only_for_aura: true
-      distinct: true
+      distinct: false
     pipeline:
     - type: damage
       coeff: 231
@@ -24,6 +24,7 @@ pipeline:
       coeff_per_tick: 19.25
       spirit_per_tick: 0
       bonus_crit: 0
+      fixed_crit: 0
   - type: resource_gain
     pool: spiritbar
-    amount: .33
+    amount: .3

@@ -87,7 +87,8 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
         index: <int>      # optional: if multiple steps match, pick 0-based index
     """
     warn_no_match = True
-    for t in talents:
+    for t in talents: #do behavior changing talents
+        print(t)
         tid = t.get("id", "?")
         for p in (t.get("patches") or []):
             ab_field = p["ability"]
@@ -111,85 +112,69 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                     ab.meta = meta = {}
                 done = meta.setdefault("patched_by", set())
                 op = p.get("op")
-                print("op")
-                print(op)
                 if op == "insert_after":
                     _apply_insert_op(ab, p, tid, before=False, warn_no_match=warn_no_match)
 
                 elif op == "insert_before":
-                    print("adding behavior before")
                     _apply_insert_op(ab, p, tid, before=True, warn_no_match=warn_no_match)
-        for t in talents:
-            print("t!")
-            for p in (t.get("patches") or []):
-                print("p")
-                print(p)
-                print("p")
-                ab_id = p["ability"]
-                ab = specs.get(ab_id)
-                if not ab:
-                    if warn_no_match:
-                        print(f"[talents] warn: ability '{ab_id}' not found for patch in talent {t.get('id')}")
+
+    for t in talents: #do simple modification talents
+        for p in (t.get("patches") or []):
+            ab_id = p["ability"]
+            ab = specs.get(ab_id)
+            if not ab:
+                if warn_no_match:
+                    print(f"[talents] warn: ability '{ab_id}' not found for patch in talent {t.get('id')}")
+                continue
+
+            where = p.get("where", {})
+            want_type = where.get("type")
+            want_name = where.get("name")  # optional (e.g., dot name)
+            matches: List[Tuple[dict, Tuple]] = []
+            for step, path in _iter_steps_recursive(ab.pipeline):
+                if want_type and step.get("type") != want_type:
                     continue
+                if want_name is not None and step.get("name") != want_name:
+                    continue
+                matches.append((step, path))
 
-                where = p.get("where", {})
-                want_type = where.get("type")
-                want_name = where.get("name")  # optional (e.g., dot name)
-                matches: List[Tuple[dict, Tuple]] = []
-                print(want_type, want_name)
-                print("x")
-                print(_iter_steps_recursive(ab.pipeline))
-                print("x")
-                for step, path in _iter_steps_recursive(ab.pipeline):
-                    if want_type and step.get("type") != want_type:
-                        continue
-                    if want_name is not None and step.get("name") != want_name:
-                        continue
-                    matches.append((step, path))
+            if not matches:
+                if warn_no_match:
+                    print(
+                        f"[talents] warn: no steps matched where={where} in ability '{ab_id}' (talent {t.get('id')})")
+                continue
 
-                if not matches:
+            targets = matches
+            if "index" in p:
+                idx = int(p["index"])
+                if 0 <= idx < len(matches):
+                    targets = [matches[idx]]
+                else:
                     if warn_no_match:
                         print(
-                            f"[talents] warn: no steps matched where={where} in ability '{ab_id}' (talent {t.get('id')})")
+                            f"[talents] warn: index {idx} out of range ({len(matches)}) for ability '{ab_id}' (talent {t.get('id')})")
                     continue
 
-                targets = matches
-                if "index" in p:
-                    idx = int(p["index"])
-                    if 0 <= idx < len(matches):
-                        targets = [matches[idx]]
+            op = p["op"];
+            if "field" in p:
+                field = p["field"]
+                for (step, path) in targets:
+                    if op == "set":
+                        step[field] = float(p["to"])
                     else:
-                        if warn_no_match:
-                            print(
-                                f"[talents] warn: index {idx} out of range ({len(matches)}) for ability '{ab_id}' (talent {t.get('id')})")
-                        continue
-
-                op = p["op"];
-                if "field" in p:
-                    field = p["field"]
-                    for (step, path) in targets:
-                        print(step, path)
-                        if op == "set":
-                            step[field] = float(p["to"])
+                        if field not in step:
+                            # silently skip if field missing for add/scale; feel free to warn instead
+                            if warn_no_match:
+                                print(
+                                    f"[talents] warn: field '{field}' missing at {path} in '{ab_id}' (talent {t.get('id')})")
+                            continue
+                        if op == "scale":
+                            step[field] = float(step[field]) * float(p["by"])
+                        elif op == "add":
+                            step[field] = float(step[field]) + float(p["by"])
                         else:
-                            if field not in step:
-                                # silently skip if field missing for add/scale; feel free to warn instead
-                                if warn_no_match:
-                                    print(
-                                        f"[talents] warn: field '{field}' missing at {path} in '{ab_id}' (talent {t.get('id')})")
-                                continue
-                            if op == "scale":
-                                print("scale")
-                                print(step[field], p["by"])
-                                step[field] = float(step[field]) * float(p["by"])
-                                print(step[field])
-                            elif op == "add":
-                                print("add")
-                                print(step[field], p["by"])
-                                step[field] = float(step[field]) + float(p["by"])
-                            else:
-                                if warn_no_match:
-                                    print(f"[talents] warn: unknown op '{op}' in talent {t.get('id')}")
+                            if warn_no_match:
+                                print(f"[talents] warn: unknown op '{op}' in talent {t.get('id')}")
 
 
 # ---------- Event-driven listeners (runtime) ----------
@@ -210,11 +195,9 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
     for t in talents:
         if t.get("type") != "on_dot_tick_extend":
             continue
-        print(t)
         src = t["source_dot"]
         ext_list = t.get("extend", [])
         owner_only = bool(t.get("owner_only", True))
-        print(src,ext_list)
         def handler(dot=None, t_us=None, **_):
             # fire only when YOUR source dot ticks
             if dot is None or dot.name != src or dot.owner is not player:
@@ -249,11 +232,9 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
     for t in talents:
         if t.get("type") != "on_dot_tick_cd":
             continue
-        print(t)
         src = t["source_dot"]
         red_list = t.get("reduce", [])
         owner_only = bool(t.get("owner_only", True))
-        print(src,red_list)
         def handler(dot=None, t_us=None, crit=False,**_):
             # fire only when YOUR source dot ticks
             is_crit = crit
@@ -262,12 +243,10 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
             eng = player.eng
             target = dot.target
             for spec in red_list:
-                print(spec)
                 extra_s = float(spec.get("seconds", 0.0))
                 extra_s_crit = float(spec.get("seconds_crit", extra_s))
                 delta_us = s_to_us(extra_s_crit if is_crit else extra_s)
                 cd = spec["cd"]
-                print(cd,delta_us)
                 if not cd:
                     continue
                 # reduce cooldown safely
@@ -385,10 +364,7 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         def _bump(target, now_us, owner):
             # store stacks on the TARGET as a light “aura” dict
             a = target.auras.get(aura_name)
-            print("bumping!")
-            print(a)
             if not a:
-                print("it's a new a!")
                 a = target.auras[aura_name] = {"stacks": 0, "per": per_stack, "max": max_stacks, "owner": owner}
             if owner_only and a.get("owner") is not owner:
                 # if some other player's aura exists, either ignore or replace; we’ll ignore
@@ -417,8 +393,6 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         owner_only = bool(t.get("owner_only", True))
         base_chance = float(t.get("base_chance", 0.04))  # 4%
         scale_factor = float(t.get("base_crit_scale", 0.20))  # +20% of base crit
-        print("Registering a pretick critter")
-        print(dots,base_chance, scale_factor)
         def on_pre_tick(dot=None, t_us=None, **_):
             if dot is None:
                 return

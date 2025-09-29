@@ -7,7 +7,7 @@ class SimpleAPL:
     Priority:
     """
 
-    def __init__(self, player, target, world, talents, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "all", logger=None, bus=None):
+    def __init__(self, player, target, world, talents, is_cd_ready, is_off_gcd,time_until_ready_us, *, debug: str = "off", logger=None, bus=None):
         """
         debug: "off" | "unique" | "all"
           - "unique": log only when the chosen action differs from the previous decision (default)

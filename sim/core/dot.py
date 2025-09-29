@@ -18,6 +18,7 @@ class DotState:
     ember_per_tick: float
     spirit_per_tick: float
     bonus_crit: float
+    fixed_crit: float = -1
     preserve_phase_on_refresh: bool = False #assume you will "dot clip"
     refresh_overlap: float = 0.0 #assume no pandemic
     stacks: int = 0
@@ -48,17 +49,11 @@ class DotState:
             # remove only if still the same object and truly expired
             if dot.target.auras.get(dot.name) is dot and eng.t_us >= dot.expires_at_us:
                 dot._remove_now()
-                print("removing:")
-                print(dot)
                 if(dot.name=="SearingBlaze"):
-                    print("removing a sb")
                     if dot.target.auras.get("SearingBlazeAmp"):
-                        print("trying to remove an amp")
                         amp = dot.target.auras.get("SearingBlazeAmp")
-                        print(amp)
                         amp["stacks"] = 0
                         dot.target.buffs.pop("SearingBlazeAmp",None)
-                        print(dot.target.buffs)
         self.expire_evt = eng.schedule_at(self.expires_at_us, on_expire)
 
     def current_tick_interval_us(self) -> int:
@@ -97,6 +92,10 @@ class DotState:
             return
         #publish the pre-event to listeners who may modify it
         self.owner.bus.pub("dot_pre_tick", dot=self, t_us=eng.t_us)
+
+        mult = 1.0
+        is_crit = False
+
         temp_bonus_crit = 0
         if getattr(self, "_force_crit_tick", False):
             temp_bonus_crit = 1
@@ -104,30 +103,42 @@ class DotState:
         if hasattr(self, "_force_crit_tick"):
             delattr(self, "_force_crit_tick")
 
-        # deal damage
-        mult = 1.0 + (self.stacks * self.stack_mult_per if self.max_stacks > 0 else 0.0)
-        if self.owner.current_crit()+self.bonus_crit+temp_bonus_crit > 1: #grievous crits
-            mult *= (self.owner.current_crit()+self.bonus_crit+temp_bonus_crit)
 
+        if self.fixed_crit>=0:
+            if self.fixed_crit + self.bonus_crit + temp_bonus_crit > 1:  # grievous crits
+                mult *= (self.fixed_crit + self.bonus_crit + temp_bonus_crit)
+
+            if self.owner.rng.roll("dot_crit", self.fixed_crit + self.bonus_crit + temp_bonus_crit): #if dot has a fixed crit value, use that instead of character crit
+                mult *= 2.0
+                is_crit = True
+        else:
+            if self.owner.current_crit() + self.bonus_crit + temp_bonus_crit > 1:  # grievous crits
+                mult *= (self.owner.current_crit() + self.bonus_crit + temp_bonus_crit)
+
+            if self.owner.rng.roll("dot_crit", self.owner.current_crit() + self.bonus_crit + temp_bonus_crit):
+                mult *= 2.0
+                is_crit = True
+
+        # deal damage
+        mult *= (1.0 + (self.stacks * self.stack_mult_per if self.max_stacks > 0 else 0.0))
 
         if self.name == "SearingBlaze":
             amp = self.target.auras.get("SearingBlazeAmp")
-            print(amp)
             if amp:
                 mult *= (1.0 + amp.get("stacks", 0) * amp.get("per", 0.0))
 
         dmg = self.coeff_per_tick * self.owner.power * mult
-        is_crit = False
-        if self.owner.rng.roll("dot_crit", self.owner.current_crit()+self.bonus_crit+temp_bonus_crit):
-            dmg *= 2.0
-            is_crit = True
+
         self.owner.add_damage(dmg, self.name)
+
         self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us,crit=is_crit)
         # gain resources
+        self.owner.spiritbar.gain(dmg / 600)
         if self.ember_per_tick:
             self.owner.ember.gain(self.ember_per_tick)
         if self.spirit_per_tick:
             self.owner.spiritbar.gain(self.spirit_per_tick)
+
 
         # schedule next anchored tick honoring haste
         I = self.current_tick_interval_us()

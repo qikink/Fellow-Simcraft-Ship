@@ -13,3 +13,4 @@ patches:
       percent_of_hit: 0.60
       require_crit: true
       first_tick: interval
+      bonus_crit: 0

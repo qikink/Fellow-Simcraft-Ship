@@ -26,6 +26,7 @@ pipeline:
         coeff_per_tick: 49
         ember_per_tick: 1
         bonus_crit: 0
+        fixed_crit: 0
   - type: resource_gain
     pool: spiritbar
     amount: .33

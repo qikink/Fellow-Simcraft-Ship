@@ -6,7 +6,7 @@ def make_apl(player, target, world, talents, helpers):
         is_cd_ready=helpers["is_cd_ready"],
         is_off_gcd=helpers["is_off_gcd"],
         time_until_ready_us=helpers["time_until_ready_us"],
-        debug="all", logger=None, bus=player.bus
+        debug="off", logger=None, bus=player.bus
     )
     apl.count_enemies = helpers["count_enemies"]
     apl.count_aura = helpers["count_aura"]

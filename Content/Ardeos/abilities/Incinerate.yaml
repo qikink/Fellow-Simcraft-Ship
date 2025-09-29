@@ -14,6 +14,9 @@ pipeline:
     on_tick:
       - type: damage
         coeff: 95
+      - type: extend_dots
+        exclude: ["IncinerateMark"]
+        extend_s: .5
       - type: resource_gain               # 360 ember total -> 36 × 10
         pool: ember
         amount: 36
@@ -26,6 +29,4 @@ pipeline:
         max_stacks: 10
         stack_mult_per: 0.20              # +20% per stack (dynamic, no snapshot)
         add_stacks: 1
-  - type: resource_gain
-    pool: spiritbar
-    amount: 1.5
+        bonus_crit: 0

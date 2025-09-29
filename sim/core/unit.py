@@ -85,16 +85,10 @@ def reduce_cooldown_us(player, eng, ability_id: str, delta_us: int):
 
     # Simple cooldown path
     ready_at = player.cooldown_ready_us.get(ability_id, 0)
-    print("CD")
-    print(ability_id)
-    print(ready_at)
     if now < ready_at:
         player.cooldown_ready_us[ability_id] = max(now, ready_at - delta_us)
 
 def grant_charge(player, eng, ability_id: str, amount: int = 1):
-    print("Granting a Charge!")
-    print(ability_id)
-    print(amount)
     st = getattr(player, "charges", {}).get(ability_id)
     if not st or amount <= 0:
         return 0
@@ -191,7 +185,7 @@ class Unit:
         return max(0, getattr(dot, "expires_at_us", now_us) - now_us)
 
     def recalc_dot_timers(self):
-        """Retimes all owned active DoTs to reflect a sudden change in tick interval."""
+        """Retimes all owned active DoTs to reflect a change in tick interval."""
         now = self.eng.t_us
         for dot in list(self.active_dots):
             if getattr(dot, "owner", None) is self:

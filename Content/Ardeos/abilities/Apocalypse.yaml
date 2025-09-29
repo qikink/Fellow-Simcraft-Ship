@@ -28,4 +28,4 @@ pipeline:
         refresh_overlap: .3
   - type: resource_gain
     pool: spiritbar
-    amount: 1.33
+    amount: 1.2

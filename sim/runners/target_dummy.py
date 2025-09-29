@@ -108,7 +108,6 @@ def run_sim(content_dir: str, cfg: SimConfig):
         c = 0
         for u in world.enemies_alive():
             dot = u.auras.get(aura_name)
-            print(dot)
             if not dot:
                 continue
             if owner_only and dot.owner is not player:

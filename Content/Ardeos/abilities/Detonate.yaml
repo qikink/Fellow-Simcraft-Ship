@@ -1,6 +1,6 @@
 id: detonate
 name: Detonate
-tags: [spender]
+tags: [spender, burst]
 cooldown_s: 0
 cast: { gcd_s: 1.0, cast_time_s: 0.0 }
 cost: { ember: 100 }
@@ -8,8 +8,10 @@ pipeline:
   - type: resource_spend
     pool: ember
     amount: 100
-  - type: damage
-    coeff: 249
+  - type: burst_dots
+    window_s: 3.0
+    owner_only: true
+    roll_crits: true     # roll a crit on the final result
   - type: resource_gain
     pool: spiritbar
-    amount: .33
+    amount: .3

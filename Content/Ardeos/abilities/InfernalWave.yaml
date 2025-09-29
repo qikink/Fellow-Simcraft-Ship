@@ -24,4 +24,4 @@ pipeline:
     amount: 40
   - type: resource_gain
     pool: spiritbar
-    amount: .66
+    amount: .6

@@ -83,7 +83,7 @@ def comp_damage(ctx: Ctx, step: dict):
     if force:
         is_crit = True
     dmg = base * (2.0 if is_crit else 1.0)
-    ctx.caster.spiritbar.gain(dmg/400) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
+    ctx.caster.spiritbar.gain(dmg/600) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
     ctx.caster.add_damage(dmg, ctx.spec.name)
     ctx.bus.pub("damage_done",
                 t_us=ctx.eng.t_us,
@@ -184,6 +184,7 @@ def comp_dot(ctx: Ctx, step: dict):
     refresh_overlap = float(step.get("refresh_overlap", 0.0))
     first = step.get("first_tick", "interval")  # "interval" or 0
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste))) if first == "interval" else 0
+    fixed_crit = float(step.get("fixed_crit", -1))
 
     dot = ctx.target.auras.get(name)
     now = ctx.eng.t_us
@@ -197,6 +198,7 @@ def comp_dot(ctx: Ctx, step: dict):
             bonus_crit = bonus_crit,
             preserve_phase_on_refresh=preserve_phase_on_refresh,
             refresh_overlap=refresh_overlap,
+            fixed_crit = fixed_crit,
         )
         ctx.target.auras[name] = dot
         ctx.caster.active_dots.append(dot)        # <-- track ownership
@@ -211,13 +213,9 @@ def comp_dot(ctx: Ctx, step: dict):
         ctx.eng.schedule_at(dot.expires_at_us, on_expire)
     else:
         overlap_dur = 0
-        print("about to refresh")
         if dot.refresh_overlap > 0:
-            print("building a longer refresh")
             remaining_dur_us = dot.expires_at_us - now
             overlap_dur = max(0,min(remaining_dur_us,dot.base_duration_us*dot.refresh_overlap)) #pandemic if applicable
-            print("overlap_dur")
-            print(overlap_dur)
         dot.refresh(now, dur_us+overlap_dur)
 
 @component("apply_buff")
@@ -359,6 +357,7 @@ def comp_dot_from_last_hit(ctx: Ctx, step: dict):
     dur_s       = float(step["duration_s"])
     base_tick_s = float(step.get("tick_s", 1.0))
     pct         = float(step.get("percent_of_hit", 0.60))
+    bonus_crit = float(step.get("bonus_crit", 0.0))
     first_mode  = step.get("first_tick", "interval")
 
     # effective tick period under current DoT haste model
@@ -382,7 +381,7 @@ def comp_dot_from_last_hit(ctx: Ctx, step: dict):
         base_duration_us=dur_us, expires_at_us=now + dur_us,
         base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
         ember_per_tick=0, preserve_phase_on_refresh=True,
-        spirit_per_tick=0,bonus_crit=0
+        spirit_per_tick=0,bonus_crit=bonus_crit,
     )
     # tag for analytics if you want
     dot.src_ability_id = ctx.vars.get("last_hit_ability", ctx.spec.id)
@@ -410,7 +409,6 @@ def comp_scale_by_my_dot_count(ctx: Ctx, step: dict):
     include = set(step.get("include", [])) or None
     exclude = set(step.get("exclude", []))
     owner_only = bool(step.get("owner_only", True))
-    print("scaling damage")
     n = 0
     for aura in ctx.target.auras.values():
         if not isinstance(aura, DotState):
@@ -430,6 +428,78 @@ def comp_scale_by_my_dot_count(ctx: Ctx, step: dict):
         n = min(int(cap), n)
 
     mult = 1.0 + per * n
-    print(mult)
     # compose if another step already set a multiplier
     ctx.vars["damage_mult"] = float(ctx.vars.get("damage_mult", 1.0)) * mult
+
+
+@component("burst_dots")
+def comp_burst_dots(ctx: Ctx, step: dict):
+    """
+    Instantly deal the damage that each *currently active* DoT would do over a forward window.
+    - window_s: seconds to burst (default 3.0)
+    - owner_only: if true (default), only burst DoTs owned by the caster
+    - roll_crits: if true (default), roll crit per simulated tick using current crit chance
+    Notes:
+      * Uses each DoT's *current* tick interval (includes Wildfire / additive DoT haste).
+      * Uses current stack multiplier (no snapshot); does NOT change DoT state.
+      * Does NOT grant ember or publish dot_tick events.
+    """
+    window_us = s_to_us(float(step.get("window_s", 3.0)))
+    owner_only = bool(step.get("owner_only", True))
+    roll_crits = bool(step.get("roll_crits", True))
+
+    eng = ctx.eng
+    now = eng.t_us
+    end = now + window_us
+
+    total = 0.0
+
+    for dot in list(ctx.target.auras.values()):
+        if not isinstance(dot, DotState):
+            continue
+        if owner_only and dot.owner is not ctx.caster:
+            continue
+
+        # respect expiry within window
+        stop = min(end, dot.expires_at_us)
+        if stop <= now:
+            continue
+
+        # current (hasted) tick interval and anchored phase
+        I = dot.current_tick_interval_us()
+        if I <= 0:
+            continue
+        virtual_ticks = window_us/I
+
+        mult = 1.0
+
+        if dot.name == "SearingBlaze":
+            amp = dot.target.auras.get("SearingBlazeAmp")
+            if amp:
+                mult *= (1.0 + amp.get("stacks", 0) * amp.get("per", 0.0))
+
+        mult *= (1.0 + (dot.stacks * dot.stack_mult_per if dot.max_stacks > 0 else 0.0))
+        tick_dmg = dot.coeff_per_tick * dot.owner.power * mult  # use owner’s power
+        overall_damage = tick_dmg * virtual_ticks
+        total += overall_damage
+    if total > 0:
+        if roll_crits:
+            if ctx.caster.current_crit() > 1:
+                total *= ctx.caster.current_crit() #grievous crits
+            if ctx.caster.rng.roll("detonate_crit", ctx.caster.current_crit()):
+                total *= 2.0
+
+        ctx.caster.add_damage(total, ctx.spec.name)
+        ctx.caster.spiritbar.gain(total / 400)
+
+@component("extend_dots")
+def extend_dots(ctx: Ctx, step: dict):
+    extend_us = s_to_us(float(step.get("extend_s", 1.0)))
+    excludes = set(step.get("exclude", []))
+    for dot in list(ctx.target.auras.values()):
+        if not isinstance(dot, DotState):
+            continue
+        if dot.name in excludes:
+            continue
+        dot.expires_at_us+=extend_us
+        dot.schedule_expire
