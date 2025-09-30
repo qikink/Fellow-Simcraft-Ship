@@ -4,24 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="Fixing Ardeos ability configuration and including various test configs">
+    <list default="true" id="2d8c9097-a343-4e54-b028-ed5841a2cde8" name="Changes" comment="Continued to improve accurac of Ardeos abilities. Fixed Ember gain from DoTs (non-hasted)">
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/BurstingIce.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/ColdSnap.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/FlightofNavir.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/FreezingTorrent.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/FrostBolt.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/FrostSwallow.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/GlacialBlast.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/IceBlitz.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/IceComet.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Content/Rime/abilities/WrathofWinter.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Apocalypse.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Apocalypse.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/EngulfingFlames.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/EngulfingFlames.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogs.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/FireFrogs.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Fireball.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Fireball.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Incinerate.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Incinerate.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/Pyromania.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/Pyromania.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/abilities/SearingBlaze.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/abilities/SearingBlaze.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/5B_PyrophibianFrenzy.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5B_PyrophibianFrenzy.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Ardeos/talents/5C_ReignOfFire.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Ardeos/talents/5C_ReignOfFire.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/harness.py" beforeDir="false" afterPath="$PROJECT_DIR$/harness.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_me.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_me.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/core/dot.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/core/dot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/runtime/components.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/components.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/runtime/ppm.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/ppm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sim/runtime/talents.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/runtime/talents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sim/core/apl.py" beforeDir="false" afterPath="$PROJECT_DIR$/sim/core/apl.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +109,7 @@
       <workItem from="1758988948025" duration="16910000" />
       <workItem from="1759029772888" duration="11565000" />
       <workItem from="1759184153846" duration="4217000" />
-      <workItem from="1759198218913" duration="2297000" />
+      <workItem from="1759198218913" duration="5147000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented most Ardeos Talents">
       <option name="closed" value="true" />
@@ -139,7 +135,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759181611786</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Continued to improve accurac of Ardeos abilities. Fixed Ember gain from DoTs (non-hasted)">
+      <option name="closed" value="true" />
+      <created>1759200591018</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1759200591018</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -150,12 +154,13 @@
     <MESSAGE value="Implemented most Ardeos Talents" />
     <MESSAGE value="Testing Harness &amp; Final Implementation for Ardeos Talents and Abilities" />
     <MESSAGE value="Fixing Ardeos ability configuration and including various test configs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixing Ardeos ability configuration and including various test configs" />
+    <MESSAGE value="Continued to improve accurac of Ardeos abilities. Fixed Ember gain from DoTs (non-hasted)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Continued to improve accurac of Ardeos abilities. Fixed Ember gain from DoTs (non-hasted)" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$unit.coverage" NAME="unit Coverage Results" MODIFIED="1758992629996" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$run_me.coverage" NAME="run_me Coverage Results" MODIFIED="1759199057589" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$harness.coverage" NAME="harness Coverage Results" MODIFIED="1759199582781" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$harness.coverage" NAME="harness Coverage Results" MODIFIED="1759202741891" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$apl.coverage" NAME="apl Coverage Results" MODIFIED="1759176175288" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/core" />
     <SUITE FILE_PATH="coverage/Fellow_Simcraft_Ship$target_dummy.coverage" NAME="target_dummy Coverage Results" MODIFIED="1758995002647" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sim/runners" />
   </component>

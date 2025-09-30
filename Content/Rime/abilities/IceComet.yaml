@@ -1,0 +1,20 @@
+id: ice_comet
+name: "Ice Comet"
+tags: [spender, nuke]
+cast: { gcd_s: 1.5, cast_time_s: 0.0 }
+cost: { ember: 100 }
+cooldown_s: 0
+pipeline:
+  - type: fanout
+    select:
+      count: 100
+      include_primary: true
+      prefer_missing_aura: none
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+      - type: damage
+        coeff: 454
+  - type: resource_gain
+    pool: spiritbar
+    amount: 1.2

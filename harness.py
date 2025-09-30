@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # Example usage; adjust paths and values to your repo
     req = BatchRequest(
         content_dir="content",  # root of your character packs
-        attrs=Attrs(name="Ardeos", power=1.0, haste=1.4, base_crit=.1,base_spirit_gain=1.1),
+        attrs=Attrs(name="Ardeos", power=1.0, haste=1.1, base_crit=.4,base_spirit_gain=1.1),
         talent_sets=[
             {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
             {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },

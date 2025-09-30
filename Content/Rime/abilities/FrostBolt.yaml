@@ -1,0 +1,15 @@
+id: frostbolt
+name: "Frostbolt"
+tags: [spell, builder]
+cooldown_s: 0
+cast: { gcd_s: 1.5, cast_time_s: 1.5 }
+cost: { ember: 0 }
+pipeline:
+  - type: damage
+    coeff: 233
+  - type: resource_gain
+    pool: ember
+    amount: 11.12
+  - type: resource_gain
+    pool: spiritbar
+    amount: .4

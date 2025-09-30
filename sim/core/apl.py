@@ -188,13 +188,13 @@ class SimpleAPL:
             return ("infernal_wave", t)
 
         # Pyro if many targets without engulfing
-        if self.is_cd_ready("pyromania") and engulfing_cov<=n-3 and tt_engulfing_flames <= true_est_ramp+10:
+        if self.is_cd_ready("pyromania") and engulfing_cov<=n-3 and tt_engulfing_flames <= true_est_ramp+12:
             tgt = self.next_enemy_missing_aura("EngulfingFlames")
             self._log_decision(action="pyromania", reason="3+ Targets missing Engulfing", now_us=now_us,target=tgt.name)
             return ("pyromania",tgt)
 
         # Engulfing when available
-        if self.is_cd_ready("engulfing_flames") and engulfing_cov<n and (tt_pyromania <= true_est_ramp or 20 <= true_est_ramp+8):
+        if self.is_cd_ready("engulfing_flames") and engulfing_cov<n and (tt_pyromania <= true_est_ramp or 20 <= true_est_ramp+12):
             tgt = self.next_enemy_missing_aura("EngulfingFlames")
             self._log_decision(action="engulfing_flames", reason="Engulfing Ready & Not Present", now_us=now_us,target=tgt.name)
             return ("engulfing_flames",tgt)
@@ -205,11 +205,11 @@ class SimpleAPL:
             return ("pyromania",t)
 
         # Fireball when available and not already present
-        if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) == 0 and 30 <= true_est_ramp+10:
+        if self.is_cd_ready("fireball") and t.aura_remains_us("Fireball", now_us) == 0 and 30 <= true_est_ramp+15:
             self._log_decision(action="fireball", reason="Fireball Ready & Not Present", now_us=now_us,target=t.name)
             return ("fireball",t)
 
-        if self.is_cd_ready("fire_frogs") and 60 <= true_est_ramp+15:
+        if self.is_cd_ready("fire_frogs") and 60 <= true_est_ramp+35:
             self._log_decision(action="fire_frogs", reason="Frogs Ready", now_us=now_us,target=t.name)
             return ("fire_frogs",t)
 
@@ -225,7 +225,7 @@ class SimpleAPL:
                                now_us=now_us, target=t.name)
             return ("incinerate", t)
 
-        if self.is_cd_ready("wildfire") and not p.has_buff("Wildfire") and t.aura_remains_us("EngulfingFlames", now_us) >= 3 and 45<= true_est_ramp+10:
+        if self.is_cd_ready("wildfire") and not p.has_buff("Wildfire") and t.aura_remains_us("EngulfingFlames", now_us) >= 3 and 45<= true_est_ramp+25:
             self._log_decision(action="wildfire", reason="Wildfire ready & Engulfing Active", now_us=now_us,target=t.name)
             return ("wildfire",None)
 
