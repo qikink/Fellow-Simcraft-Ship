@@ -83,7 +83,7 @@ def comp_damage(ctx: Ctx, step: dict):
     if force:
         is_crit = True
     dmg = base * (2.0 if is_crit else 1.0)
-    ctx.caster.spiritbar.gain(dmg/600) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
+    ctx.caster.spiritbar.gain(dmg/1000) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
     ctx.caster.add_damage(dmg, ctx.spec.name)
     ctx.bus.pub("damage_done",
                 t_us=ctx.eng.t_us,
@@ -185,6 +185,7 @@ def comp_dot(ctx: Ctx, step: dict):
     first = step.get("first_tick", "interval")  # "interval" or 0
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste))) if first == "interval" else 0
     fixed_crit = float(step.get("fixed_crit", -1))
+    is_hasted = bool(step.get("is_hasted", True))
 
     dot = ctx.target.auras.get(name)
     now = ctx.eng.t_us
@@ -199,6 +200,7 @@ def comp_dot(ctx: Ctx, step: dict):
             preserve_phase_on_refresh=preserve_phase_on_refresh,
             refresh_overlap=refresh_overlap,
             fixed_crit = fixed_crit,
+            is_hasted = is_hasted,
         )
         ctx.target.auras[name] = dot
         ctx.caster.active_dots.append(dot)        # <-- track ownership
@@ -364,7 +366,7 @@ def comp_dot_from_last_hit(ctx: Ctx, step: dict):
 
     # effective tick period under current DoT haste model
     eff_haste = max(1e-9, ctx.caster.haste + ctx.caster.dot_haste_bonus())
-    eff_tick_s = base_tick_s / eff_haste
+    eff_tick_s = base_tick_s / 1 #pretty sure the base tick is determined *un-hasted*
 
     # Choose coeff_per_tick so DPS ≈ (pct * amt) / dur_s
     # Since per-tick damage = coeff_per_tick * power, DPS ≈ (coeff_per_tick * power) / eff_tick_s

@@ -18,6 +18,7 @@ class DotState:
     ember_per_tick: float
     spirit_per_tick: float
     bonus_crit: float
+    is_hasted: bool = True
     fixed_crit: float = -1
     preserve_phase_on_refresh: bool = False #assume you will "dot clip"
     refresh_overlap: float = 0.0 #assume no pandemic
@@ -59,7 +60,10 @@ class DotState:
     def current_tick_interval_us(self) -> int:
         # Effective haste = base factor + additive bonuses.
         # Convention: owner.haste = 1.00 means +0% Haste; 1.25 means +25%.
-        eff_haste = max(1e-9, (self.owner.haste if self.owner else 1.0) + self.owner.dot_haste_bonus())
+        if self.is_hasted:
+            eff_haste = max(1e-9, (self.owner.haste if self.owner else 1.0) + self.owner.dot_haste_bonus())
+        else:
+            eff_haste = 1
         return max(1, int(round(self.base_tick_us / eff_haste)))
 
     def retime(self, now_us: int):
@@ -133,7 +137,7 @@ class DotState:
 
         self.owner.bus.pub("dot_tick", dot=self, t_us=eng.t_us,crit=is_crit)
         # gain resources
-        self.owner.spiritbar.gain(dmg / 600)
+        self.owner.spiritbar.gain(dmg / 1000)
         if self.ember_per_tick:
             self.owner.ember.gain(self.ember_per_tick)
         if self.spirit_per_tick:

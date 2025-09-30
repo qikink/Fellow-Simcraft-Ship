@@ -3,7 +3,7 @@ name: "Apocalypse"
 tags: [cooldown, nuke, dot_applier]
 cast: { gcd_s: 1.5, cast_time_s: 3.0 }
 cost: { ember: 0 }
-cooldown_s: 120
+cooldown_s: 60
 pipeline:
   - type: fanout
     select:

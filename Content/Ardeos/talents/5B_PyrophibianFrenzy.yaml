@@ -7,9 +7,9 @@ exclude: ["FrogDot"]
 apply:
   name: FrogDot
   chance: .08
-  duration_s: 15
+  duration_s: 12
   tick_s: 3.0
   first_tick: interval
-  coeff_per_tick: 19.25
+  coeff_per_tick: 40
   spirit_per_tick: 0
   bonus_crit: 0

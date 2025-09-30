@@ -168,10 +168,10 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                                 print(
                                     f"[talents] warn: field '{field}' missing at {path} in '{ab_id}' (talent {t.get('id')})")
                             continue
-                        if op == "scale":
-                            step[field] = float(step[field]) * float(p["by"])
-                        elif op == "add":
+                        if op == "add":
                             step[field] = float(step[field]) + float(p["by"])
+                        elif op == "scale":
+                            step[field] = float(step[field]) * float(p["by"])
                         else:
                             if warn_no_match:
                                 print(f"[talents] warn: unknown op '{op}' in talent {t.get('id')}")
@@ -336,7 +336,7 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         def on_cast_end(ability_id=None, t_us=None, caster=None, **_):
             if caster is not player or ability_id != ability_source:
                 return
-            if not tracker.try_proc(t_us):
+            if not tracker.try_proc(t_us,player.haste):
                 return
 
             # proc! apply effects

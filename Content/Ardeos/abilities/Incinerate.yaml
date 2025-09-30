@@ -12,21 +12,29 @@ pipeline:
   - type: channel
     ticks: 10
     on_tick:
-      - type: damage
-        coeff: 95
-      - type: extend_dots
-        exclude: ["IncinerateMark"]
-        extend_s: .5
       - type: resource_gain               # 360 ember total -> 36 × 10
         pool: ember
         amount: 36
-      - type: stack_dot                   # apply/refresh stacking DoT
-        name: IncinerateMark
-        duration_s: 12.0
-        tick_s: 1.0
-        first_tick: interval
-        coeff_per_tick: 24.0
-        max_stacks: 10
-        stack_mult_per: 0.20              # +20% per stack (dynamic, no snapshot)
-        add_stacks: 1
-        bonus_crit: 0
+      - type: fanout
+        select:
+          count: 100
+          include_primary: true
+          owner_only_for_aura: true
+          distinct: true
+        pipeline:
+        - type: damage
+          coeff: 95
+        - type: extend_dots
+          exclude: ["IncinerateMark"]
+          extend_s: .5
+        - type: stack_dot                   # apply/refresh stacking DoT
+          name: IncinerateMark
+          duration_s: 12.0
+          tick_s: 1.0
+          first_tick: interval
+          coeff_per_tick: 24.0
+          max_stacks: 10
+          stack_mult_per: 0.20              # +20% per stack (dynamic, no snapshot)
+          add_stacks: 1
+          bonus_crit: 0
+          is_hasted: true

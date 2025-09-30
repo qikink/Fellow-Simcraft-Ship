@@ -23,3 +23,14 @@ pipeline:
         ember_per_tick: 10
         spirit_per_tick: 0
         bonus_crit: 0
+        is_hasted: true
+      - type: dot
+        name: EngulfingFlamesEmbers
+        duration_s: 9.0
+        tick_s: 3.0
+        first_tick: interval
+        coeff_per_tick: 0
+        ember_per_tick: 10
+        spirit_per_tick: 0
+        bonus_crit: 0
+        is_hasted: false

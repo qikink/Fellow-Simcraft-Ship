@@ -11,11 +11,24 @@ pipeline:
     tick_s: 2.0
     first_tick: interval
     coeff_per_tick: 67
+    ember_per_tick: 0
+    spirit_per_tick: 0
+    bonus_crit: 0
+    preserve_phase_on_refresh: True
+    refresh_overlap: .3
+    is_hasted: true
+  - type: dot
+    name: SearingBlazeEmbers
+    duration_s: 24.0
+    tick_s: 2.0
+    first_tick: interval
+    coeff_per_tick: 0
     ember_per_tick: 1
     spirit_per_tick: 0
     bonus_crit: 0
     preserve_phase_on_refresh: True
     refresh_overlap: .3
+    is_hasted: false
   - type: resource_gain
     pool: spiritbar
     amount: .3
