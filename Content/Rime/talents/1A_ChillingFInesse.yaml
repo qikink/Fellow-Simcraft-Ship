@@ -1,0 +1,9 @@
+id: "1A"
+name: "Chilling Finesse"
+points: 2
+type: on_cast_cd
+source_cast: cold_snap
+reduce:
+  - cd: freezing_torrent
+    seconds: 1.5
+

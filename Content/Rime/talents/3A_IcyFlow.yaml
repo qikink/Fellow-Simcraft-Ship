@@ -1,0 +1,13 @@
+id: "3A"
+name: "Icy Flow"
+points: 2
+patches:
+  - ability: cold_snap
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+      type: apply_stacking_buff
+      name: IcyFlow
+      duration_s: 8        # 9s duration
+      stacks: 1
+      max_stacks: 2

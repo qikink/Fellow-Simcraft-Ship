@@ -1,0 +1,35 @@
+id: bursting_ice
+name: "Bursting Ice"
+cast: { gcd_s: 1.5, cast_time_s: 2.0 }
+cost: { ember: 0 }
+cooldown_s: 10
+off_gcd: false
+pipeline:
+  - type: dot
+    name: BurstingIceAnima
+    duration_s: 3.0
+    tick_s: .5
+    first_tick: interval
+    coeff_per_tick: 0
+    ember_per_tick: 11.12
+    spirit_per_tick: 0
+    bonus_crit: 0
+    is_hasted: false
+  - type: fanout
+    select:
+      count: 9999
+      include_primary: true
+      prefer_missing_aura: BurstingIce
+      owner_only_for_aura: true
+      distinct: true
+    pipeline:
+      - type: dot
+        name: BurstingIce
+        duration_s: 3.0
+        tick_s: 0.5
+        first_tick: interval
+        coeff_per_tick: 55
+        ember_per_tick: 0
+        spirit_per_tick: 0
+        bonus_crit: 0
+        is_hasted: true

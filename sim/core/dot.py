@@ -131,6 +131,7 @@ class DotState:
             if amp:
                 mult *= (1.0 + amp.get("stacks", 0) * amp.get("per", 0.0))
 
+        mult *= self.owner.buff_damage_mult()
         dmg = self.coeff_per_tick * self.owner.power * mult
 
         self.owner.add_damage(dmg, self.name)

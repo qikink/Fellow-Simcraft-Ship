@@ -10,11 +10,10 @@ charges:
   recharge_s: 30.0
 pipeline:
   - type: fanout
-    select:
-      count: 100
-      include_primary: true
-      owner_only_for_aura: true
-      distinct: true
+    count: 100
+    include_primary: true
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: damage
         coeff: 281

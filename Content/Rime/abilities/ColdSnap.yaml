@@ -1,0 +1,18 @@
+id: cold_snap
+name: "Cold Snap"
+tags: [cooldown, nuke]
+cast: { gcd_s: 1.5, cast_time_s: 0.0 }
+cost: { ember: 0 }
+cooldown_s: 0.0
+charges:
+  max: 2
+  recharge_s: 12.0
+pipeline:
+  - type: damage
+    coeff: 305
+  - type: resource_gain
+    pool: ember
+    amount: 100
+  - type: resource_gain
+    pool: spiritbar
+    amount: .3

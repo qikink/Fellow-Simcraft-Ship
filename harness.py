@@ -26,6 +26,7 @@ class BatchRequest:
     run_count: int = 100
     duration_s: float = 300.0                   # 5 minutes default
     base_seed: int = 1337                       # change for a different Monte Carlo repeat
+    movement: float = 0
 
 # ---------- Helpers ----------
 def _format_talents(tal: Dict[str, Any]) -> str:
@@ -78,7 +79,7 @@ def run_batch(req: BatchRequest):
         "base_spirit_gain": req.attrs.base_spirit_gain,
         "power": req.attrs.power
     }
-
+    movement = req.movement
     for tal in req.talent_sets:
         tal_key = _format_talents(tal)
         for enc in req.schedules:
@@ -98,7 +99,8 @@ def run_batch(req: BatchRequest):
                     power=stats["power"],
                     haste=stats["haste"],
                     base_crit=stats["base_crit"],
-                    base_spirit_gain=stats["base_spirit_gain"]
+                    base_spirit_gain=stats["base_spirit_gain"],
+                    movement=movement,
                 )
                 try:
                     setattr(cfg, "stats", stats)  # harmless if SimConfig already declares it
@@ -138,16 +140,20 @@ if __name__ == "__main__":
         content_dir="content",  # root of your character packs
         attrs=Attrs(name="Ardeos", power=1.0, haste=1.1, base_crit=.4,base_spirit_gain=1.1),
         talent_sets=[
-            {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
-            {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },
-            {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
-            {"1C": True, "2C": True, "3A": True, "3B":True,"4B": True}
+                         {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
+                        {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
+                      {"1C": True, "2C": True, "3A": True, "5C": True},
+                      {"1C": True, "2C": True, "3A": True, "3B": True, "6C": True},
+                     {"1A": True,"1C": True, "2C": True, "5C": True},
+                    {"1A": True, "1C": True, "3B": True, "5C": True},
+
         ],
         schedules=[
             [(0, 1)],                            # pure ST
             [(0, 3)],          # cleave
             [(0,3),(30,1),(45,8),(75,3),(100,5),(130,1),(145,8),(175,3),(200,5),(230,1)] #"dungeon slice" (oof)
         ],
+        movement=.15,
         run_count=50,
         duration_s=300.0,
         base_seed=1337,
@@ -156,7 +162,10 @@ if __name__ == "__main__":
     print_table(rows)
 
     #top contenders
-    # {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},{"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },{"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True}
+    #             {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
+    #             {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },
+    #             {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
+    #             {"1C": True, "2C": True, "3A": True, "3B":True,"4B": True}
 
     #reasonable builds
     #{"1C":True,"2C":True,"3A":True,"3B":True,"6A":True,},{"1C":True,"2C":True,"3B":True,"5C":True}

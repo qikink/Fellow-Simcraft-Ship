@@ -1,0 +1,15 @@
+id: glacial_blast
+name: "Glacial Blast"
+tags: [spell, builder]
+cooldown_s: 0
+cast: { gcd_s: 1.5, cast_time_s: 2.0 }
+cost: { ember: 100 }
+pipeline:
+  - type: resource_spend
+    pool: ember
+    amount: 100
+  - type: damage
+    coeff: 990
+  - type: resource_gain
+    pool: spiritbar
+    amount: .4

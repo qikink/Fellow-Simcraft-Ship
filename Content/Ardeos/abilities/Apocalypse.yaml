@@ -6,12 +6,11 @@ cost: { ember: 0 }
 cooldown_s: 60
 pipeline:
   - type: fanout
-    select:
-      count: 100
-      include_primary: true
-      prefer_missing_aura: none
-      owner_only_for_aura: true
-      distinct: true
+    count: 100
+    include_primary: true
+    prefer_missing_aura: none
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: damage
         coeff: 773

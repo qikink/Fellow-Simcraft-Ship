@@ -1,0 +1,14 @@
+id: "4B"
+name: "Greater Glacial Blast"
+points: 1
+patches:
+  - ability: glacial_blast
+    where: { type: damage }
+    op: scale
+    field: coeff
+    by: .4
+  - ability: glacial_blast
+    where: { }
+    op: add
+    field: cast_time_s
+    by: .5

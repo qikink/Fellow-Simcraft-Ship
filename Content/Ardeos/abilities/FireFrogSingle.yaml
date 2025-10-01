@@ -1,5 +1,5 @@
-id: fire_frogs
-name: "Fire Frogs"
+id: fire_frog_single
+name: "Fire Frog Single"
 tags: [dot, cooldown]
 cooldown_s: 45
 cast: { gcd_s: 1.0, cast_time_s: 0.0 }

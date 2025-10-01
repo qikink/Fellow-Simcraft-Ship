@@ -7,12 +7,11 @@ cooldown_s: 90
 off_gcd: true
 pipeline:
   - type: fanout
-    select:
-      count: 3
-      include_primary: true
-      prefer_missing_aura: EngulfingFlames     # prioritize enemies not already burning (by you)
-      owner_only_for_aura: true
-      distinct: true
+    count: 3
+    include_primary: true
+    prefer_missing_aura: EngulfingFlames     # prioritize enemies not already burning (by you)
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: dot
         name: EngulfingFlames
@@ -30,7 +29,7 @@ pipeline:
         tick_s: 3.0
         first_tick: interval
         coeff_per_tick: 0
-        ember_per_tick: 10
+        ember_per_tick: 0
         spirit_per_tick: 0
         bonus_crit: 0
         is_hasted: false

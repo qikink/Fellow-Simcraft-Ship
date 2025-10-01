@@ -4,28 +4,28 @@ tags: [dot, cooldown]
 cooldown_s: 45
 cast: { gcd_s: 1.5, cast_time_s: 0.0 }
 cost: { ember: 0 }
-
 pipeline:
   - type: fanout
-    select:
-      count: 5
-      include_primary: true
-      prefer_missing_aura: none
-      owner_only_for_aura: true
-      distinct: false
+    count: 5
+    include_primary: true
+    prefer_missing_aura: none
+    owner_only_for_aura: true
+    distinct: false
     pipeline:
     - type: damage
-      coeff: 231
-    - type: dot
+      coeff: 232
+    - type: stack_dot                   # apply/refresh stacking DoT
       name: FrogDot
-      duration_s: 15
+      duration_s: 15.0
       tick_s: 3.0
       first_tick: interval
       coeff_per_tick: 19.25
-      spirit_per_tick: 0
+      max_stacks: 10
+      stack_mult_per: 1              # +20% per stack (dynamic, no snapshot)
+      add_stacks: 1
       bonus_crit: 0
-      fixed_crit: 0
       is_hasted: true
+      fixed_crit: 0
   - type: resource_gain
     pool: spiritbar
     amount: .3

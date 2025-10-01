@@ -8,13 +8,12 @@ pipeline:
   - type: damage
     coeff: 155
   - type: fanout
-    select:
-      count: 100
-      include_primary: false
-      exclude_primary: true
-      require_aura: SearingBlaze
-      owner_only_for_aura: true
-      distinct: true
+    count: 100
+    include_primary: false
+    exclude_primary: true
+    require_aura: SearingBlaze
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: damage
         name: FlareUpCleave

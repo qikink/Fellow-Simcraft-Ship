@@ -2,10 +2,11 @@
 from sim.runners.target_dummy import run_sim, SimConfig
 result = run_sim(content_dir="Content", cfg=SimConfig(
     duration_s=300.0, power=1.0, haste=1.25, base_crit=.05,base_spirit_gain=1.05,
-    talents={"5C":True,"3B":True,},
+    talents={"1B":True,"3":True,},
     seed=1339,
     character="Ardeos",
     encounter=[(0,3)],
+    movement=1,
 ))
 print("DPS:", round(result["dps"], 2))
 print("Casts:", result["casts"])

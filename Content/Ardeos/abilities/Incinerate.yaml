@@ -7,7 +7,7 @@ cooldown_s: 0
 pipeline:
   - type: apply_buff
     name: Heroism
-    duration_s: 20        # 9s duration
+    duration_s: 20
     haste_bonus: 0.30        # +30% haste
   - type: channel
     ticks: 10
@@ -16,11 +16,10 @@ pipeline:
         pool: ember
         amount: 36
       - type: fanout
-        select:
-          count: 100
-          include_primary: true
-          owner_only_for_aura: true
-          distinct: true
+        count: 100
+        include_primary: true
+        owner_only_for_aura: true
+        distinct: true
         pipeline:
         - type: damage
           coeff: 95

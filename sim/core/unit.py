@@ -210,6 +210,25 @@ class Unit:
                         self.recalc_dot_timers()
             self.eng.schedule_at(buff.expires_at_us, expire)
 
+    def add_stacking_buff(self, buff: Buff):
+        if self.buffs[buff.name]:
+            self.buffs[buff.name].props["stacks"] += buff.props.get("stacks", 0)
+        else:
+            self.buffs[buff.name] = buff
+
+        # If this buff affects DoT haste, retime immediately
+        if "dot_haste_mult" in buff.props:
+            self.recalc_dot_timers()
+
+        if buff.expires_at_us is not None:
+            def expire():
+                if self.buffs.get(buff.name) is buff and self.eng.t_us >= buff.expires_at_us:
+                    self.buffs.pop(buff.name, None)
+                    # On removal, also retime if it affected DoT haste
+                    if "dot_haste_mult" in buff.props:
+                        self.recalc_dot_timers()
+            self.eng.schedule_at(buff.expires_at_us, expire)
+
     def has_buff(self, name: str) -> bool:
         return name in self.buffs
 
@@ -266,6 +285,17 @@ class Unit:
             else:      self.next_crit_for[ability_id] = n - 1
             return True
         return False
+
+    def buff_damage_mult(self) -> float:
+        mult = 1.0
+        for b in self.buffs.values():
+            # support dict- or object-style buff storage
+            m = getattr(b, "damage_bonus", None)
+            if m is None and isinstance(b, dict):
+                m = b.get("damage_bonus")
+            if m:
+                mult *= float(m)
+        return mult
 
 
 class TargetDummy(Unit):

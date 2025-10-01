@@ -1,0 +1,15 @@
+id: freezing_torrent
+name: "Freezing Torrent"
+tags: [cooldown, channel]
+cast: { gcd_s: 1.5, cast_time_s: 2.0 }
+cost: { ember: 0 }
+cooldown_s: 15
+pipeline:
+  - type: channel
+    ticks: 5
+    on_tick:
+      - type: resource_gain
+        pool: ember
+        amount: 11.12
+      - type: damage
+        coeff: 143

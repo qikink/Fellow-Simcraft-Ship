@@ -1,0 +1,11 @@
+id: flight_of_the_navir
+name: "Flight of the Navir"
+tags: [cooldown, nuke]
+cast: { gcd_s: 1.5, cast_time_s: 0.0 }
+cost: { ember: 0 }
+cooldown_s: 60
+pipeline:
+  - type: apply_stacking_buff
+    name: swallows
+    duration_s: 20
+    stacks: 5

@@ -1,0 +1,11 @@
+id: "2C"
+name: "Navir's Keeper"
+points: 1
+type: on_cast_proc
+source_cast: flight_of_the_navir
+effects:
+  - type: grant_charge
+    ability: cold_snap
+    amount: 2
+
+

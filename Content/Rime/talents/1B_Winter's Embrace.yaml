@@ -1,0 +1,12 @@
+id: "1B"
+name: "Winter's Embrace"
+points: 2
+patches:
+  - ability: bursting_ice
+    op: insert_after
+    where: { type: dot }   # the per-target damage step
+    step:
+      type: apply_buff
+      name: WintersEmbrace
+      duration_s: 9        # 9s duration
+      damage_bonus: 1.2

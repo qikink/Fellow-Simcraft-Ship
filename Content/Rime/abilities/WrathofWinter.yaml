@@ -1,0 +1,25 @@
+id: wrath_of_winter
+name: "Wrath of Winter"
+tags: [cooldown, nuke, dot_applier]
+cast: { gcd_s: 1.5, cast_time_s: 0.0 }
+cost: { spirit_bar: 100 }
+cooldown_s: 0
+pipeline:
+  - type: apply_buff
+    name: Heroism
+    duration_s: 20
+    haste_bonus: 0.30        # +30% haste
+  - type: dot
+    name: WrathOfWinterAnima
+    duration_s: 20.0
+    tick_s: 4.0
+    first_tick: interval
+    coeff_per_tick: 0
+    ember_per_tick: 100
+    spirit_per_tick: 0
+    bonus_crit: 0
+    is_hasted: false
+  - type: apply_buff
+    name: WrathOfWinter
+    duration_s: 20
+    damage_bonus: 1.25

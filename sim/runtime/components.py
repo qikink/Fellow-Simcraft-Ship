@@ -77,11 +77,13 @@ def comp_damage(ctx: Ctx, step: dict):
         mult *= (ctx.crit_chance()+bonus_force_crit)
 
     mult_from_ctx = float(ctx.vars.pop("damage_mult", 1.0))
-    base = coeff * ctx.power * mult * mult_from_ctx
+    global_mult = ctx.caster.buff_damage_mult()
+    base = coeff * ctx.power * mult * mult_from_ctx * global_mult
     # dynamic crit roll
     is_crit = ctx.caster.rng.roll("crit", ctx.crit_chance())
     if force:
         is_crit = True
+
     dmg = base * (2.0 if is_crit else 1.0)
     ctx.caster.spiritbar.gain(dmg/1000) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
     ctx.caster.add_damage(dmg, ctx.spec.name)
@@ -229,6 +231,15 @@ def comp_apply_buff(ctx: Ctx, step: dict):
     props = {k:v for k,v in step.items() if k not in known}
     ctx.caster.add_buff(Buff(name=name, expires_at_us=expires, props=props))
 
+@component("apply_stacking_buff")
+def comp_applystacking_buff(ctx: Ctx, step: dict):
+    name = step["name"]
+    dur = step.get("duration_s")
+    expires = ctx.eng.t_us + s_to_us(float(dur)) if dur is not None else None
+    known = {"type","name","duration_s"}
+    props = {k:v for k,v in step.items() if k not in known}
+    ctx.caster.add_stacking_buff(Buff(name=name, expires_at_us=expires, props=props))
+
 # sim/runtime/components.py
 def _world(ctx):
     return (ctx.cfg or {}).get("world", None)
@@ -251,14 +262,14 @@ def comp_fanout(ctx: Ctx, step: dict):
     assert world is not None, "fanout requires world in ctx.cfg"
 
     sel = step.get("select", {})
-    want = int(sel.get("count", 1))
-    include_primary = bool(sel.get("include_primary", True))
-    exclude_primary = bool(sel.get("exclude_primary", False))
-    prefer_aura = sel.get("prefer_missing_aura")
-    require_aura = sel.get("require_aura")
-    owner_only_for_aura = bool(sel.get("owner_only_for_aura", True))
-    distinct = bool(sel.get("distinct", True))
-    side = sel.get("owner", "enemies")
+    want = int(step.get("count", 1))
+    include_primary = bool(step.get("include_primary", True))
+    exclude_primary = bool(step.get("exclude_primary", False))
+    prefer_aura = step.get("prefer_missing_aura")
+    require_aura = step.get("require_aura")
+    owner_only_for_aura = bool(step.get("owner_only_for_aura", True))
+    distinct = bool(step.get("distinct", True))
+    side = step.get("owner", "enemies")
 
     # candidate pool
     if side == "enemies":
@@ -508,3 +519,42 @@ def extend_dots(ctx: Ctx, step: dict):
             continue
         dot.expires_at_us+=extend_us
         dot.schedule_expire
+
+
+
+@component("extra_hit")
+def extra_hit(ctx: Ctx, step: dict):
+    """
+     Fire extra hits after this cast.
+     step:
+       hits: int                 # e.g. 5
+       coeff: float              # per-hit coefficient (e.g. 63)
+       fanout_chance: float      # 0..1 chance each hit fans out to all enemies (e.g. 0.35)
+       rng_key: str              # optional, stable RNG key prefix
+     """
+    hits = int(step.get("hits", 5))
+    coeff = float(step.get("coeff", 63.0))
+    fanout_chance = float(step.get("fanout_chance", 0.35))
+    fanout_mult = float(step.get("fanout_mult", 1.0))
+    rng_key = step.get("rng_key", f"bursting:{ctx.spec.id}")
+
+    world = (ctx.cfg or {}).get("world")
+    # build a single "damage" step; include both top-level and args for compatibility
+    dmg_step = {"type": "damage", "coeff": coeff*fanout_mult, "args": {"coeff": coeff*fanout_mult}}
+
+    for i in range(hits):
+        # roll once per hit
+        fanout = ctx.caster.rng.roll(f"{rng_key}:{i}", fanout_chance)
+
+        if fanout and world:
+            # hit ALL alive enemies (includes primary); adapt if you later add a range system
+            for u in (world.enemies_alive() or []):
+                prev = ctx.target
+                try:
+                    ctx.target = u
+                    ctx.run([dmg_step])
+                finally:
+                    ctx.target = prev
+        else:
+            # single-target (current ctx.target)
+            ctx.run([dmg_step])

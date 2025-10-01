@@ -25,6 +25,7 @@ class SimConfig:
     seed: int = 1337
     character: str = "Ardeos"
     encounter: list[tuple[float,int]] | None = None   # e.g. [(0,1),(15,3),(30,1)]
+    movement: float = 0
 
 
 
@@ -33,6 +34,7 @@ def run_sim(content_dir: str, cfg: SimConfig):
     rng = RNG(cfg.seed)
     pack = load_character_spec(content_dir, cfg.character)
     make_apl = load_apl_factory(pack.paths["apl"],talents=cfg.talents)
+    movement = cfg.movement
 
     world = World(eng, bus, rng)
     schedule_encounter(world, cfg.encounter or [(0, 1)])  # default: 1 target full sim
@@ -122,7 +124,7 @@ def run_sim(content_dir: str, cfg: SimConfig):
                 return u
         return world.primary()  # fallback
 
-    apl = make_apl(player, target, world, cfg.talents, helpers={
+    apl = make_apl(player, target, world, cfg.talents, movement, helpers={
         "is_cd_ready": is_cd_ready,
         "is_off_gcd": is_off_gcd,
         "time_until_ready_us": time_until_ready_us,

@@ -2,15 +2,20 @@ id: "1B"
 name: Frog Squad
 points: 2
 patches:
-  # +33% initial hit
+  # 1 extra attack
   - ability: fire_frogs                 # ability id
-    where: { type: damage }             # first 'damage' step
-    op: scale
-    field: coeff
-    by: 1.33
+    where: { type: fanout }             #
+    op: add
+    field: count
+    by: 1
   # +1s to its DoT duration
   - ability: fire_frogs
-    where: { type: dot, name: FrogDot }  # dot step for Fire Frogs
+    where: { type: stack_dot, name: FrogDot }  # dot step for Fire Frogs
     op: add
     field: duration_s
     by: 1.0
+  - ability: fire_frogs
+    where: { type: damage }  # dot step for Fire Frogs
+    op: scale
+    field: coeff
+    by: 1.34

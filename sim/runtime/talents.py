@@ -106,7 +106,6 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                         print(f"[talents] warn: ability '{ab_id}' not found (talent {tid})")
                     continue
 
-                # Optional: one-time guard per ability+talent
                 meta = getattr(ab, "meta", None)
                 if meta is None:
                     ab.meta = meta = {}
@@ -118,10 +117,12 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                 elif op == "insert_before":
                     _apply_insert_op(ab, p, tid, before=True, warn_no_match=warn_no_match)
 
-    for t in talents: #do simple modification talents
+    for t in talents: #do simple modification talent# s
+        tid = t.get("id", "?")
         for p in (t.get("patches") or []):
             ab_id = p["ability"]
             ab = specs.get(ab_id)
+
             if not ab:
                 if warn_no_match:
                     print(f"[talents] warn: ability '{ab_id}' not found for patch in talent {t.get('id')}")
@@ -137,7 +138,6 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                 if want_name is not None and step.get("name") != want_name:
                     continue
                 matches.append((step, path))
-
             if not matches:
                 if warn_no_match:
                     print(

@@ -14,3 +14,8 @@ class RNG:
     def roll(self, name: str, p: float) -> bool:
         p = max(0.0, min(1.0, p))
         return self.stream(name).random() < p
+
+    def damage_variance(self,name: str):
+        v = self.stream(name).random()*0.02
+        v = v-.01
+        return p

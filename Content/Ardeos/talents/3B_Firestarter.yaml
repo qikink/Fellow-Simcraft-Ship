@@ -29,7 +29,7 @@ patches:
     field: bonus_crit
     by: .2
   - ability: fire_frogs
-    where: { type: dot}
+    where: { type: stack_dot}
     op: set
     field: fixed_crit
     to: 0.2
