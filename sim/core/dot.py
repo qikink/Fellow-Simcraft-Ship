@@ -113,14 +113,14 @@ class DotState:
                 mult *= (self.fixed_crit + self.bonus_crit + temp_bonus_crit)
 
             if self.owner.rng.roll("dot_crit", self.fixed_crit + self.bonus_crit + temp_bonus_crit): #if dot has a fixed crit value, use that instead of character crit
-                mult *= 2.0
+                mult *= self.owner.critical_strike_multiplier
                 is_crit = True
         else:
             if self.owner.current_crit() + self.bonus_crit + temp_bonus_crit > 1:  # grievous crits
                 mult *= (self.owner.current_crit() + self.bonus_crit + temp_bonus_crit)
 
             if self.owner.rng.roll("dot_crit", self.owner.current_crit() + self.bonus_crit + temp_bonus_crit):
-                mult *= 2.0
+                mult *= self.owner.critical_strike_multiplier
                 is_crit = True
 
         # deal damage

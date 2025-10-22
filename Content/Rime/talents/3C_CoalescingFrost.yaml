@@ -1,3 +1,31 @@
 id: "3C"
 name: "Coalescing Frost"
 points: 2
+type: apply_debuff
+buff_name: CoalescingFrost
+effects:
+  - type: run_pipeline
+    waterfall: true
+    ability: coalescing_frost_explosion
+    pipeline:
+      - type: fanout
+        count: 9999
+        include_primary: true
+        owner_only_for_aura: true
+        distinct: true
+        stack_buff: CoalescingFrost
+        pipeline:
+          - type: damage_per_stack
+            coeff: 43
+patches:
+  - ability: freezing_torrent
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+      type: apply_stacking_debuff
+      name: CoalescingFrost
+      duration_s: 3
+      stacks: 1
+      stack_chance: 1
+      stacks_on_crit: 2
+      stacks_on_crit_chance: 0.5

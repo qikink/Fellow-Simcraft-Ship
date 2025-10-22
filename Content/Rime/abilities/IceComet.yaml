@@ -9,15 +9,11 @@ pipeline:
     pool: ember
     amount: 100
   - type: fanout
-    select:
-      count: 100
-      include_primary: true
-      prefer_missing_aura: none
-      owner_only_for_aura: true
-      distinct: true
+    count: 100
+    include_primary: true
+    prefer_missing_aura: none
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: damage
         coeff: 454
-  - type: resource_gain
-    pool: spiritbar
-    amount: 1.2

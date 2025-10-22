@@ -1,6 +1,12 @@
 id: "1C"
 name: "Glacial Assault"
 points: 2
+type: modify_cast
+source_cast: glacial_blast
+buff_name: GlacialAssault
+required_stacks: 4
+effects:
+  - type: make_cast_instant
 patches:
   - ability: cold_snap
     op: insert_after

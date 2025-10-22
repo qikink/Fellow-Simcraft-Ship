@@ -29,6 +29,3 @@ pipeline:
     preserve_phase_on_refresh: True
     refresh_overlap: .3
     is_hasted: false
-  - type: resource_gain
-    pool: spiritbar
-    amount: .3

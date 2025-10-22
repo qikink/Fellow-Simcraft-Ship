@@ -25,6 +25,3 @@ pipeline:
     spirit_per_tick: 0
     bonus_crit: 0
     is_hasted: false
-  - type: resource_gain
-    pool: spiritbar
-    amount: .4

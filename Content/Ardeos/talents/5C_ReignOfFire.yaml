@@ -3,7 +3,7 @@ name: Reign of Fire
 points: 3
 type: on_cast_ppm_proc
 source_cast: detonate
-ppm: 10.0
+ppm: 1.0
 effects:
   - type: grant_charge
     ability: fireball

@@ -1,7 +1,5 @@
-id: frost_swallow
+id: swallow_proc
 name: "Frost Swallow"
 tags: [cooldown, nuke, dot_applier]
 cast: { gcd_s: 1.5, cast_time_s: 0.0 }
 cost: { ember: 0 }
-cooldown_s: 60
-pipeline:

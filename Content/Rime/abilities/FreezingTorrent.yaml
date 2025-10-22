@@ -4,9 +4,11 @@ tags: [cooldown, channel]
 cast: { gcd_s: 1.5, cast_time_s: 2.0 }
 cost: { ember: 0 }
 cooldown_s: 15
+on_cast_start: true
+is_hasted: false
 pipeline:
   - type: channel
-    ticks: 5
+    tick_dur: .4
     on_tick:
       - type: resource_gain
         pool: ember

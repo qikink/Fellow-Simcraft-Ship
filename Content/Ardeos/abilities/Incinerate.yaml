@@ -5,6 +5,9 @@ cast: { gcd_s: 1.5, cast_time_s: 4.0 }
 cost: { spirit_bar: 100 }
 cooldown_s: 0
 pipeline:
+  - type: resource_spend
+    pool: spirit
+    amount: 100
   - type: apply_buff
     name: Heroism
     duration_s: 20

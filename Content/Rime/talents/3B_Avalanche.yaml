@@ -1,3 +1,15 @@
 id: "3B"
 name: "Avalanche"
 points: 2
+type: on_cast_proc
+source_cast: ice_comet
+effects:
+  - type: damage_mult
+    chance: .15
+    ability: ice_comet
+    amount: 2
+    waterfall: false
+  - type: damage_mult
+    chance: .0823
+    ability: ice_comet
+    amount: 3

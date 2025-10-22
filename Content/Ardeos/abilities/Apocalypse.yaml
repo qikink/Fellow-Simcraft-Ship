@@ -25,6 +25,3 @@ pipeline:
         bonus_crit: 0
         preserve_phase_on_refresh: True
         refresh_overlap: .3
-  - type: resource_gain
-    pool: spiritbar
-    amount: 1.2

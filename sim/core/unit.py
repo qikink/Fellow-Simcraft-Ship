@@ -2,12 +2,14 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
-from .engine import s_to_us
+from .engine import s_to_us, Bus, Engine
+from math import floor
 
 @dataclass
 class Buff:
     name: str
     expires_at_us: Optional[int] = None      # None = no timeout
+    expire_evt: Optional[object] = None
     props: Dict[str, Any] = field(default_factory=dict)  # generic payload
 
 @dataclass
@@ -18,22 +20,32 @@ class ChargeState:
     pending: list = field(default_factory=list)  # scheduled recharge events
 
 class EmberPool:
-    def __init__(self,owner: "Unit", maximum: float=500, starting: float=200):
+    def __init__(self,owner: "Unit", maximum: float=500, starting: float=200, bus: Bus=None, eng: Engine=None):
         self.max = maximum
         self.cur = starting
         self.generated = 0
         self.spent = 0
         self.owner = owner
+        self.bus = bus
+        self.eng = eng
+        self.phased_generate = 0
     def gain(self, v: float):
         self.generated += v
+        self.phased_generate += v
+        if self.phased_generate >= 100:
+            amount = floor(self.phased_generate / 100)
+            self.bus.pub("generate_ember", t_us=self.eng.t_us,amount=amount)
+            self.phased_generate = self.phased_generate % 100
         self.cur = min(self.max, self.cur + v)
     def spend(self, v: int) -> bool:
         is_refund = self.owner.rng.roll("refund", self.owner.base_spirit_gain-1)
+        amount = v
         if is_refund:
             v=0
         if self.cur >= v:
             self.cur -= v
             self.spent += v
+            self.bus.pub("spend_ember",t_us=self.eng.t_us, amount=amount)
             return True
         return False
 
@@ -106,7 +118,7 @@ def grant_charge(player, eng, ability_id: str, amount: int = 1):
     return added
 
 class Unit:
-    def __init__(self, name, eng, bus, rng: RNG, haste: float = 1.0, power: float = 100.0, base_crit: float = 0.05, base_spirit_gain: float = 1.0):
+    def __init__(self, name, eng, bus, rng: RNG, haste: float = 1.0, power: float = 100.0, base_crit: float = 0.05, base_spirit_gain: float = 1.0, critical_strike_multiplier: float = 2.0):
         self.name = name
         self.eng = eng
         self.bus = bus
@@ -115,8 +127,9 @@ class Unit:
         self.power = power
         self.base_crit = base_crit
         self.base_spirit_gain = base_spirit_gain
+        self.critical_strike_multiplier = critical_strike_multiplier
 
-        self.ember = EmberPool(self,500,200)
+        self.ember = EmberPool(self,500,200,self.bus,self.eng)
         self.spiritbar = SpiritPool(self,100, 0)
         self.gcd_ready_us = 0
         self.busy_until_us = 0
@@ -138,7 +151,8 @@ class Unit:
 
         self.active_dots: List[object] = []   # <-- track DotState instances
         self.next_crit_for: dict[str, int] = {}  # ability_id -> stacks
-
+        self.next_crit_bonus_for: dict[str, int] = {}  # ability_id -> stacks
+        self.next_crit_bonus_is: dict[str, float] = {}  # ability_id -> bonus
 
     def current_crit(self)->float:
         bonus=sum(float(b.props.get("crit_bonus",0.0)) for b in self.buffs.values())
@@ -184,6 +198,11 @@ class Unit:
         if not dot: return 0
         return max(0, getattr(dot, "expires_at_us", now_us) - now_us)
 
+    def buff_remains_us(self, name: str, now_us: int) -> int:
+        buff = self.buffs.get(name)
+        if not buff: return 0
+        return max(0, getattr(buff, "expires_at_us", now_us) - now_us)
+
     def recalc_dot_timers(self):
         """Retimes all owned active DoTs to reflect a change in tick interval."""
         now = self.eng.t_us
@@ -211,11 +230,12 @@ class Unit:
             self.eng.schedule_at(buff.expires_at_us, expire)
 
     def add_stacking_buff(self, buff: Buff):
-        if self.buffs[buff.name]:
+        if self.buffs.get(buff.name):
             self.buffs[buff.name].props["stacks"] += buff.props.get("stacks", 0)
         else:
             self.buffs[buff.name] = buff
 
+        self.buffs[buff.name].props["stacks"] = min(self.buffs[buff.name].props["stacks"], buff.props.get("max_stacks", 1000))
         # If this buff affects DoT haste, retime immediately
         if "dot_haste_mult" in buff.props:
             self.recalc_dot_timers()
@@ -223,11 +243,19 @@ class Unit:
         if buff.expires_at_us is not None:
             def expire():
                 if self.buffs.get(buff.name) is buff and self.eng.t_us >= buff.expires_at_us:
+                    self.bus.pub("buff_expire",buff=buff,target=self)
+                    self.buffs[buff.name].props["stacks"] = 0
                     self.buffs.pop(buff.name, None)
                     # On removal, also retime if it affected DoT haste
                     if "dot_haste_mult" in buff.props:
                         self.recalc_dot_timers()
             self.eng.schedule_at(buff.expires_at_us, expire)
+
+    def remove_buff(self, buff: Buff):
+        self.buffs.pop(buff.name, None)
+
+    def remove_buff_by_name(self, buff: str):
+        self.buffs.pop(buff, None)
 
     def has_buff(self, name: str) -> bool:
         return name in self.buffs
@@ -278,24 +306,72 @@ class Unit:
     def grant_next_crit(self, ability_id: str, stacks: int = 1):
         self.next_crit_for[ability_id] = self.next_crit_for.get(ability_id, 0) + stacks
 
+    def grant_next_crit_bonus(self, ability_id: str, stacks: int = 1, bonus: float = 0.0):
+        self.next_crit_bonus_for[ability_id] = self.next_crit_bonus_for.get(ability_id, 0) + stacks
+        self.next_crit_bonus_is[ability_id] = bonus
+
     def consume_next_crit(self, ability_id: str) -> bool:
         n = self.next_crit_for.get(ability_id, 0)
         if n > 0:
-            if n == 1: self.next_crit_for.pop(ability_id, None)
-            else:      self.next_crit_for[ability_id] = n - 1
+            if n == 1:
+                self.next_crit_for.pop(ability_id, None)
+                if(ability_id == 'glacial_blast'): #these abilities are always linked
+                    self.next_crit_for.pop('ice_comet', None)
+                    self.remove_buff_by_name('FrostweaversWrathTracking')
+                if(ability_id == 'ice_comet'):
+                    self.next_crit_for.pop('glacial_blast', None)
+                    self.remove_buff_by_name('FrostweaversWrathTracking')
+            else:
+                self.next_crit_for[ability_id] = n - 1
+                if(ability_id == 'glacial_blast'):
+                    self.next_crit_for['ice_comet'] = n - 1
+                if(ability_id == 'ice_comet'):
+                    self.next_crit_for['glacial_blast'] = n - 1
             return True
         return False
+
+    def consume_next_crit_bonus(self, ability_id: str) -> float:
+        n = self.next_crit_bonus_for.get(ability_id, 0)
+        bonus = self.next_crit_bonus_is.get(ability_id, 0)
+        if n > 0:
+            if n == 1:
+                self.next_crit_bonus_for.pop(ability_id, None)
+                self.next_crit_bonus_is.pop(ability_id, None)
+            else:
+                self.next_crit_bonus_for[ability_id] = n - 1
+            return bonus
+        return 0
 
     def buff_damage_mult(self) -> float:
         mult = 1.0
         for b in self.buffs.values():
-            # support dict- or object-style buff storage
-            m = getattr(b, "damage_bonus", None)
-            if m is None and isinstance(b, dict):
-                m = b.get("damage_bonus")
-            if m:
-                mult *= float(m)
+            #print("checking for damage mult in:",b)
+            if "damage_bonus" in b.props:
+                mult *= float(b.props["damage_bonus"])
         return mult
+
+    def schedule_buff_expire(self,buff_id: str) -> bool:
+        # cancel old, schedule new at current expires_at_us
+        buff = self.buffs.get(buff_id)
+        if buff.expires_at_us is not None:
+            def expire():
+                if self.buffs.get(buff.name) is buff and self.eng.t_us >= buff.expires_at_us:
+                    #print("actually expiring",buff)
+                    self.bus.pub("buff_expire",buff=buff,target=self)
+                    self.buffs[buff.name].props["stacks"] = 0
+                    self.buffs.pop(buff.name, None)
+                    # On removal, also retime if it affected DoT haste
+                    if "dot_haste_mult" in buff.props:
+                        self.recalc_dot_timers()
+            self.eng.schedule_at(buff.expires_at_us, expire)
+
+    def extend_buff(self,buff_id: str,dur_us: float = 0) -> bool:
+        buff = self.buffs.get(buff_id)
+        if not buff:
+            return
+        if buff.expires_at_us is not None:
+            buff.expires_at_us += dur_us
+            self.schedule_buff_expire(buff_id)
 
 
 class TargetDummy(Unit):

@@ -21,6 +21,3 @@ pipeline:
   - type: resource_gain
     pool: ember
     amount: 40
-  - type: resource_gain
-    pool: spiritbar
-    amount: .4

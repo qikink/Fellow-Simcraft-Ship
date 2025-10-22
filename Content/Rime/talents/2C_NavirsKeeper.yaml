@@ -1,11 +1,14 @@
 id: "2C"
 name: "Navir's Keeper"
 points: 1
-type: on_cast_proc
-source_cast: flight_of_the_navir
-effects:
-  - type: grant_charge
-    ability: cold_snap
-    amount: 2
+type: on_cast_mod
+patches:
+  - ability: flight_of_the_navir
+    op: insert_after
+    where: { type: apply_stacking_buff }   # the per-target damage step
+    step:
+      - type: grant_charge
+        ability: cold_snap
+        amount: 2
 
 

@@ -28,6 +28,3 @@ pipeline:
         bonus_crit: 0
         fixed_crit: 0
         is_hasted: true
-  - type: resource_gain
-    pool: spiritbar
-    amount: .3

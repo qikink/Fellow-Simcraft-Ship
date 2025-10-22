@@ -2,7 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from ..runtime.pack import load_character_spec, load_apl_factory, load_enabled_talents
-from ..runtime.talents import apply_talent_patches, attach_talent_listeners
+from ..runtime.talents import apply_talent_patches, attach_talent_listeners, apply_talent_stat_mods
 from ..runtime.loader import load_abilities_from_dir, AbilitySpec, start_cast, Ctx
 #from ..runtime.effects import load_effect_specs, EffectInstance
 from typing import Dict
@@ -13,6 +13,9 @@ from ..core.rng import RNG
 from ..core.world import World, schedule_encounter
 from ..runtime.loader import load_abilities_from_dir, start_cast, AbilitySpec, Ctx
 from ..core.apl import SimpleAPL
+from sim.runtime.char_listeners import attach_swallow_listener, attach_wrath_listener
+
+
 
 @dataclass
 class SimConfig:
@@ -53,7 +56,27 @@ def run_sim(content_dir: str, cfg: SimConfig):
     specs = load_abilities_from_dir(pack.paths["abilities"])
     talent_dicts = load_enabled_talents(pack.paths["talents"], cfg.talents)
     apply_talent_patches(specs, talent_dicts)
-    _ = attach_talent_listeners(talent_dicts, player, bus)
+    apply_talent_stat_mods(player, talent_dicts)
+    _ = attach_talent_listeners(specs,world,talent_dicts, player, bus)
+
+    #ensure charged abilities are initialized
+    for spec in specs:
+        s = specs[spec]
+        if s.charges is not None:
+            player.ensure_charges(s.id,s.charges["max"],s.charges["recharge_s"])#we start each fight at max charges, could be configured?
+
+    if cfg.character == "Rime":
+        attach_swallow_listener(
+            player, bus, world,
+            triggers=("torrent", "cold_snap"),  # ability ids that should proc
+            coeff=63.0,
+            fanout_chance=0.35,
+        )
+        attach_wrath_listener(
+            player, bus, world,
+            triggers=("glacial_blast"),
+            buff_name="WrathOfWinter"
+        )
 
     # Helper: cooldown readiness
     def is_cd_ready(ability_id) -> bool:

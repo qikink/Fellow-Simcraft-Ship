@@ -1,0 +1,24 @@
+id: "5A-1"
+name: "Cascading Blitz 1"
+points: 3
+type: on_generate_mod
+pool: ember
+amount: 1
+chance: 1
+require_buff: true
+buff: IceBlitz
+effects:
+  - type: run_pipeline
+    waterfall: true
+    ability: swallow_proc
+    pipeline:
+      - type: damage
+        coeff: 63
+      - type: fanout
+        count: 9999
+        include_primary: true
+        distinct: true
+        chance: 0.35
+        pipeline:
+          - type: damage
+            coeff: 42

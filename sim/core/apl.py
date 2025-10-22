@@ -48,7 +48,7 @@ class SimpleAPL:
             except Exception: return False
 
         charges = {}
-        for aid in ("fireball",):
+        for aid in ("fireball","cold_snap"):
             st = p.charges.get(aid)
             if st: charges[aid] = f"{st.cur}/{st.max}"
 
@@ -120,6 +120,10 @@ class SimpleAPL:
         moving = self.player.rng.roll("moving?",self.movement)
         if now_us < max(p.gcd_ready_us, p.busy_until_us):
             return None
+        if t.aura_remains_us("BaseSpiritGain", now_us)<=0:
+            self._log_decision(action="base_spirit_gain", reason="Initializing Base Spirit Gain", now_us=now_us, target=t.name)
+            return ("base_spirit_gain", t)
+
         if self.character=="Ardeos":
             searing_cov = self.count_aura("SearingBlaze")
             engulfing_cov = self.count_aura("EngulfingFlames")
@@ -270,6 +274,75 @@ class SimpleAPL:
 
 
         elif self.character=="Rime":
+            if p.ember.cur >= 400 and n == 1:
+                self._log_decision(action="glacial_blast", reason="Orbs Capping Soon", now_us=now_us,target=t.name)
+                return ("glacial_blast",t)
+
+            if p.ember.cur >= 400 and n > 1:
+                self._log_decision(action="ice_comet", reason="Orbs Capping Soon", now_us=now_us,target=t.name)
+                return ("ice_comet",t)
+
+            if p.ember.cur >= 100 and n > 1 and p.has_buff("IcyFlow")  and self.player.buff_remains_us("IcyFlow",now_us)<s_to_us(3):
+                self._log_decision(action="ice_comet", reason="Consume Icy Flow before it Expires", now_us=now_us,target=t.name)
+                return ("ice_comet",t)
+
+            if p.ember.cur >= 100 and p.has_buff("IcyFlow") and self.player.buff_remains_us("IcyFlow",now_us)<s_to_us(4):
+                self._log_decision(action="glacial_blast", reason="Consume Icy Flow before it Expires", now_us=now_us,target=t.name)
+                return ("glacial_blast",t)
+
+            if p.ember.cur >= 100 and n > 1 and p.has_buff('FrostweaversWrathTracking'):
+                self._log_decision(action="ice_comet", reason="Consume Frostweavers Wrath Before Overproccing", now_us=now_us,target=t.name)
+                return ("ice_comet",t)
+
+            if p.ember.cur >= 100 and p.has_buff('FrostweaversWrathTracking'):
+                self._log_decision(action="glacial_blast", reason="Consume Frostweavers Wrath Before Overproccing", now_us=now_us,target=t.name)
+                return ("glacial_blast",t)
+
+            if self.is_cd_ready("ice_blitz"):
+                self._log_decision(action="ice_blitz", reason="Ice Blitz Available", now_us=now_us,target=t.name)
+                return ("ice_blitz",t)
+
+            if self.is_cd_ready("cold_snap") and "2C" in self.talents:
+                self._log_decision(action="cold_snap", reason="Cold Snap Before Flight when using 2C", now_us=now_us,target=t.name)
+                return ("cold_snap",t)
+
+            if self.is_cd_ready("flight_of_the_navir") and 1==0:
+                self._log_decision(action="flight_of_the_navir", reason="Swallows Available", now_us=now_us,target=t.name)
+                return ("flight_of_the_navir",t)
+
+            if self.player.charges.get("cold_snap").cur==2:
+                self._log_decision(action="cold_snap", reason="Cold Snap Charges Capped", now_us=now_us,target=t.name)
+                return ("cold_snap",t)
+
+            if self.is_cd_ready("freezing_torrent"):
+                self._log_decision(action="freezing_torrent", reason="Freezing Torrent Available", now_us=now_us,target=t.name)
+                return ("freezing_torrent",t)
+
+            if self.is_cd_ready("bursting_ice"):
+                self._log_decision(action="bursting_ice", reason="Bursting Ice Available", now_us=now_us,target=t.name)
+                return ("bursting_ice",t)
+
+            if p.spiritbar.cur >= 100:
+                self._log_decision(action="wrath_of_winter", reason="Spirit Gauge FUll", now_us=now_us,target=t.name)
+                return ("wrath_of_winter",t)
+
+            if self.is_cd_ready("cold_snap"):
+                self._log_decision(action="cold_snap", reason="Cold Snap Available", now_us=now_us,target=t.name)
+                return ("cold_snap",t)
+
+            if p.ember.cur >= 100 and n > 1:
+                self._log_decision(action="ice_comet", reason="Orb Available", now_us=now_us,target=t.name)
+                return ("ice_comet",t)
+
+            if self.is_cd_ready("cold_snap"):
+                self._log_decision(action="cold_snap", reason="Cold Snap Available", now_us=now_us,target=t.name)
+                return ("cold_snap",t)
+
+            if p.ember.cur >= 100:
+                self._log_decision(action="glacial_blast", reason="Orb Available", now_us=now_us,target=t.name)
+                return ("glacial_blast",t)
+
+            self._log_decision(action="frostbolt", reason="Filler", now_us=now_us, target=t.name)
             return("frostbolt",t)
         else:
             print("Warning: No Valid APL for this character")

@@ -1,0 +1,11 @@
+id: "5A-2"
+name: "Cascading Blitz 2"
+points: 3
+type: on_hit_mod
+source_ability: swallow_proc
+on_fanout: false
+effects:
+  - type: extend_buff
+    buff: IceBlitz
+    amount_s: 0.2
+    on_fanout: false

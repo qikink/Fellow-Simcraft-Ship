@@ -1,11 +1,15 @@
 # sim/runtime/talents.py
 from __future__ import annotations
+
+from pkgutil import extend_path
 from typing import Dict, List, Any, Callable
 from ..core.engine import s_to_us
 from typing import Dict, List, Any, Iterable, Tuple
-from ..core.unit import reduce_cooldown_us, grant_charge
+from ..core.unit import reduce_cooldown_us, grant_charge, Unit, Buff
 from ..core.dot import DotState
 from .ppm import PPMTracker
+from .components import run_pipeline, Ctx
+from ..core.world import World
 import copy
 
 INJECT_TAG = "__injected_by_talent__"
@@ -69,9 +73,28 @@ def _apply_insert_op(ab, patch, talent_id, *, before: bool, warn_no_match=True):
     # Insert from the BACK to keep earlier indices valid
     for parent, idx, step, path in reversed(matches):
         new_step = copy.deepcopy(step_template)
+        #print("new_step:", new_step)
+        if isinstance(new_step, list):
+            new_step = new_step[0]
         new_step[INJECT_TAG] = talent_id
         insert_idx = idx if before else idx + 1
         _insert_steps(parent, insert_idx, new_step)
+
+#Character Mods
+def apply_talent_stat_mods(character: Unit, talents: List[dict]) -> None:
+    for t in talents: #do behavior changing talents
+        type = t.get("type")
+        if(type != "stat_mod"):
+            continue
+        for s in t.get("stats", []):
+            mod = s.get("mod")
+            amount = s.get("amount")
+            stat_name = s.get("stat")
+            if stat_name=="critical_strike_multiplier":
+                if mod == "add":
+                    character.critical_strike_multiplier += amount
+                elif mod == "multiply":
+                    character.critical_strike_multiplier *= amount
 
 # ---------- Ability patching (load-time) ----------
 def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
@@ -113,7 +136,6 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
                 op = p.get("op")
                 if op == "insert_after":
                     _apply_insert_op(ab, p, tid, before=False, warn_no_match=warn_no_match)
-
                 elif op == "insert_before":
                     _apply_insert_op(ab, p, tid, before=True, warn_no_match=warn_no_match)
 
@@ -178,7 +200,7 @@ def apply_talent_patches(specs: Dict[str, Any], talents: List[dict]) -> None:
 
 
 # ---------- Event-driven listeners (runtime) ----------
-def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[], None]]:
+def attach_talent_listeners(specs: Dict[str, Any], world: World, talents: List[dict], player, bus) -> List[Callable[[], None]]:
     """
     Subscribes to bus events for talents that declare type: on_dot_tick_extend.
     Returns a list of callables to detach (no-op if your bus lacks unsubscribe).
@@ -256,6 +278,7 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         bus.sub("dot_tick", handler)
         detachers.append(lambda: None)  # fill if you add unsubscribe later
 
+
     for t in talents:
         if t.get("type") != "on_dot_crit_apply_dot":
             continue
@@ -328,13 +351,13 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         if t.get("type") != "on_cast_ppm_proc":
             continue
 
-        ability_source = t["source_cast"]            # "detonate"
+        ability_source = t.get("source_cast")            # "detonate"
         ppm = float(t.get("ppm", 1.0))
         effects = t.get("effects", [])       # list of dicts
         tracker = PPMTracker(ppm, player.rng, key=f"ppm:{t.get('id','?')}")
 
         def on_cast_end(ability_id=None, t_us=None, caster=None, **_):
-            if caster is not player or ability_id != ability_source:
+            if caster is not player or (ability_source is not None and ability_id != ability_source):
                 return
             if not tracker.try_proc(t_us,player.haste):
                 return
@@ -346,7 +369,16 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
                     grant_charge(player, player.eng, eff["ability"], int(eff.get("amount", 1)))
                 elif et == "guarantee_next_crit":
                     player.grant_next_crit(eff["ability"], int(eff.get("charges", 1)))
-                # extend here with other effect types as needed
+                elif et == "apply_buff":
+                    name = eff.get("name")
+                    expires_at_us = s_to_us(eff.get("duration_s"))+t_us
+                    props={}
+                    props["affected_cast"] = eff.get("affected_cast")
+                    props["affected_crit_bonus"] = eff.get("affected_crit_bonus")
+                    props["affected_haste_bonus"] = eff.get("affected_haste_bonus")
+                    buff = Buff(name=name,expires_at_us=expires_at_us, props=props)
+
+                    player.add_buff(buff)
 
         bus.sub("cast_end", on_cast_end)
         detachers.append(lambda: None)
@@ -408,4 +440,178 @@ def attach_talent_listeners(talents: List[dict], player, bus) -> List[Callable[[
         bus.sub("dot_pre_tick", on_pre_tick)
         detachers.append(lambda: None)
 
+
+    for t in talents:
+        if t.get("type") != "modify_cast":
+            continue
+
+        ability_source = t.get("source_cast",None)            # "detonate"
+        modify_list = t.get("source_casts", [])
+        buff_name = t["buff_name"]
+        required_stacks = t.get("required_stacks") or 0
+        effects = t.get("effects") or []
+        def on_cast_start(ability_id=None, t_us=None, caster=None, ctx=None,**_):
+            if caster is not player or (ability_id != ability_source and ability_id not in modify_list):
+                return
+            if not player.buffs.get(buff_name) or not "stacks" in player.buffs[buff_name].props or player.buffs[buff_name].props["stacks"] < required_stacks:
+                return
+            # proc! apply effects
+            for eff in effects:
+                et = eff.get("type")
+                if et == "make_cast_instant":
+                    if required_stacks > 0 and not eff.get("waterfall",False):
+                        player.buffs[buff_name].props["stacks"] = player.buffs[buff_name].props["stacks"] - required_stacks
+                    if player.buffs[buff_name].props["stacks"] == 0:
+                        player.remove_buff(player.buffs.get(buff_name))
+                    ctx.spec.cast["modified_cast_time_s"]=0
+                if et == "reduce_cast_time":
+                    if required_stacks > 0 and not eff.get("waterfall",False):
+                        player.buffs[buff_name].props["stacks"] = player.buffs[buff_name].props["stacks"] - required_stacks
+                    if  player.buffs[buff_name].props["stacks"] == 0:
+                        player.remove_buff(player.buffs.get(buff_name))
+                    ctx.spec.cast["modified_cast_time_s"] = min(0,ctx.spec.cast["cast_time_s"]-eff.get("amount",0))
+                if et == "grant_crit_chance":
+                    if required_stacks > 0 and not eff.get("waterfall",False):
+                        player.buffs[buff_name].props["stacks"] = player.buffs[buff_name].props["stacks"] - required_stacks
+                    if  player.buffs[buff_name].props["stacks"] == 0:
+                        player.remove_buff(player.buffs.get(buff_name))
+                    bonus = eff.get("amount",0)
+                    caster.grant_next_crit_bonus(ability_id,1,bonus)
+
+                # extend here with other effect types as needed
+
+        bus.sub("cast_start", on_cast_start)
+        detachers.append(lambda: None)
+
+    for t in talents:
+        if t.get("type") != "on_cast_proc":
+            continue
+
+        ability_source = t["source_cast"]            # "detonate"
+        effects_b = t.get("effects") or []
+        def on_cast_start(ability_id=None, t_us=None, caster=None, ctx=None,**_):
+            if caster is not player or ability_id != ability_source:
+                return
+            for eff in effects_b:
+                if player.rng.roll("cast proc",eff.get("chance")):
+                    et = eff.get("type")
+                    if et == "damage_mult":
+                        mult_from_ctx = float(ctx.vars.pop("damage_mult", 1.0))
+                        mult_from_ctx *= eff.get("amount",1.0)
+                        ctx.vars["damage_mult"] = mult_from_ctx
+                        #print("multiplying damage by:", mult_from_ctx)
+                    if not eff.get("waterfall"):
+                        return #end if we're at a terminal (non-waterfall) step
+
+                # extend here with other effect types as needed
+
+        bus.sub("cast_start", on_cast_start)
+        detachers.append(lambda: None)
+
+    for t in talents:
+        if t.get("type") != "apply_debuff":
+            continue
+
+        buff_name = t["buff_name"]            # "detonate"
+        effects = t.get("effects") or []
+        def on_debuff_expire(t_us=None, buff=None, target=None, ctx=None,**_):
+            if buff.name != buff_name:
+                return
+            for eff in effects:
+                #print("effect:",eff)
+                et = eff.get("type")
+                if et == "run_pipeline":
+                    pipe = eff.get("pipeline")
+                    attributed_ability = eff.get("ability")
+                    eng=player.eng
+                    cfg={'world':world}
+                    spec=specs.get(attributed_ability,None)
+                    expire_ctx = Ctx( eng=eng, bus=bus, cfg=cfg, caster=player, target=target, spec=spec, wake_apl=None)
+                    #print("trying to run with ctx:",expire_ctx)
+                    run_pipeline(expire_ctx, pipe)
+                if not eff.get("waterfall"):
+                    return #end if we're at a terminal (non-waterfall) step
+
+                # extend here with other effect types as needed
+
+        bus.sub("buff_expire", on_debuff_expire)
+        detachers.append(lambda: None)
+
+    for t in talents:
+        if t.get("type") != "on_spend_mod":
+            continue
+
+        affected = t.get("affected") or []
+        def on_spend_ember(t_us=None,**_):
+            for aff in affected:
+                et = aff.get("type")
+                if et == "reduce_cd":
+                    delta_us = s_to_us(aff.get("amount",0))
+                    cd = aff.get("ability")
+                    if not cd:
+                        continue
+                    #print("reducing cooldown of: ",cd," by: ",delta_us)
+                    reduce_cooldown_us(player, player.eng, cd, delta_us)
+
+                # extend here with other effect types as needed
+
+        bus.sub("spend_ember", on_spend_ember)
+        detachers.append(lambda: None)
+
+    for t in talents:
+        if t.get("type") == "on_generate_mod":
+            effects_a = t.get("effects", [])
+            required_buff = None
+            if t.get("require_buff"):
+                required_buff = t.get("buff")
+            def on_generate_ember(t_us,amount:int=0, **_):
+                if not player.rng.roll("on generate proc", t.get("chance", 1)):
+                    return
+                if required_buff is not None and not player.has_buff(required_buff):
+                    return
+                for eff in effects_a:
+                    et = eff.get("type")
+                    if et == "guarantee_next_crit":
+                        ability = eff.get("ability")
+                        player.grant_next_crit(ability, int(eff.get("charges", 1)))
+                    elif et == "apply_buff":
+                        name = eff.get("name")
+                        expires_at_us = s_to_us(eff.get("duration_s"))+t_us
+                        props={}
+                        props["affected_cast"] = eff.get("affected_cast")
+                        props["affected_crit_bonus"] = eff.get("affected_crit_bonus")
+                        props["affected_haste_bonus"] = eff.get("affected_haste_bonus")
+                        buff = Buff(name=name,expires_at_us=expires_at_us, props=props)
+                        player.add_buff(buff)
+                    elif et == "run_pipeline":
+                        pipe = eff.get("pipeline")
+                        attributed_ability = eff.get("ability")
+                        eng=player.eng
+                        cfg={'world':world}
+                        target=world.primary
+                        spec=specs.get(attributed_ability,None)
+                        generate_ctx = Ctx( eng=eng, bus=bus, cfg=cfg, caster=player, target=target, spec=spec, wake_apl=None)
+                        run_pipeline(generate_ctx, pipe)
+
+            bus.sub("generate_ember", on_generate_ember)
+            detachers.append(lambda: None)
+
+        if t.get("type") == "on_hit_mod":
+            effects = t.get("effects", [])  # list of dicts
+            source_ability = t.get("source_ability")
+            def on_hit(t_us,ability_id,outer_step_type: str = 'default',**_):
+                if ability_id != source_ability:
+                    return
+                if outer_step_type == 'fanout' and not t.get("on_fanout"):
+                    return
+                for eff in effects:
+                    if eff.get("type") == 'extend_buff':
+                        extension = s_to_us(eff.get("amount_s"))
+                        buff = eff.get("buff")
+                        player.extend_buff(buff, extension)
+            bus.sub("damage_done", on_hit)
+            detachers.append(lambda: None)
+
     return detachers
+
+

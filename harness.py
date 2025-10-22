@@ -138,34 +138,50 @@ if __name__ == "__main__":
     # Example usage; adjust paths and values to your repo
     req = BatchRequest(
         content_dir="content",  # root of your character packs
-        attrs=Attrs(name="Ardeos", power=1.0, haste=1.1, base_crit=.4,base_spirit_gain=1.1),
+        attrs=Attrs(name="Rime", power=1.0, haste=1.1, base_crit=.1,base_spirit_gain=1.1),
         talent_sets=[
-                         {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
-                        {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
-                      {"1C": True, "2C": True, "3A": True, "5C": True},
-                      {"1C": True, "2C": True, "3A": True, "3B": True, "6C": True},
-                     {"1A": True,"1C": True, "2C": True, "5C": True},
-                    {"1A": True, "1C": True, "3B": True, "5C": True},
-
+            {"2A": True, "3B": True, "3C": True, "5B": True},
+            {"2C": True, "3A": True, "3B": True, "5B": True},
+            {"2A": True, "6C": True, "2C": True, "3A": True, "5B": True},
+            {"1B": True, "2A": True, "2C": True, "5B": True, "6C": True},
         ],
         schedules=[
             [(0, 1)],                            # pure ST
             [(0, 3)],          # cleave
             [(0,3),(30,1),(45,8),(75,3),(100,5),(130,1),(145,8),(175,3),(200,5),(230,1)] #"dungeon slice" (oof)
         ],
-        movement=.15,
-        run_count=50,
+        movement=0.15,
+        run_count=25,
         duration_s=300.0,
         base_seed=1337,
     )
     rows = run_batch(req)
     print_table(rows)
 
+#candidate rime 8pters
+#{"2A": True, "3B": True, "3C": True, "5B": True},
+#{"2C": True, "3A": True, "3B": True, "5B": True},
+#{"1A": True, "2B": True, "3C": True, "5C": True},
+#{"1A": True, "1B": True, "2C": True, "5C": True},
+#{"1A": True, "1B": True, "2C": True, "5C": True},
+#{"2B": True, "2C": True, "3A": True, "5A": True, "5C": True},
+
+#13 pt Ardeos:
+#{"1C": True, "2C": True, "3A": True, "3B": True, "4B": True, "5C": True, "6A": True, "6C": True},
+#{"1A": True, "1C": True, "2C": True, "3B": True, "4B": True, "5C": True, "6A": True, "6C": True},
+#{"1A": True, "1B": True, "2B": True, "2C": True, "3B": True, "4B": True, "5B": True, "6A": True},
+#{"1B": True, "1C": True, "2C": True, "3B": True, "4B": True, "5B": True, "6A": True, "6C": True},
+
+
     #top contenders
-    #             {"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
-    #             {"1C": True, "3A": True, "3B": True, "4B": True, "6C": True, },
-    #             {"1C": True, "2C": True, "3A": True, "4B": True, "6A": True, "6C": True},
-    #             {"1C": True, "2C": True, "3A": True, "3B":True,"4B": True}
+#{"1C": True, "2C": True, "3B": True, "6A": True, "6C": True},
+#{"1A": True, "1C": True, "2C": True, "3B": True},
+#{"1C": True, "2C": True, "3B": True, "4B": True, "6A": True, "6C": True},
+#
+#{"1C": True, "2C": True, "3B": True, "5C": True},
+#{"1A": True, "1C": True, "3B": True, "5C": True},
+#{"1A": True, "1C": True, "2C": True, "3A": True, "6A": True},
+#{"1A": True, "1C": True, "2A": True, "2C": True, "3A": True},
 
     #reasonable builds
     #{"1C":True,"2C":True,"3A":True,"3B":True,"6A":True,},{"1C":True,"2C":True,"3B":True,"5C":True}

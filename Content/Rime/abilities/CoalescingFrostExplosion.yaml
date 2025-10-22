@@ -1,0 +1,5 @@
+id: coalescing_frost_explosion
+name: "Coalescing Frost Explosion"
+tags: [cooldown, nuke]
+cast: { gcd_s: 0.0, cast_time_s: 0.0 }
+off_gcd: true

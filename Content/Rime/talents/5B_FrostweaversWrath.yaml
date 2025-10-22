@@ -1,3 +1,16 @@
 id: "5B"
 name: "Frostweaver's Wrath"
 points: 3
+type: on_generate_mod
+pool: ember
+amount: 1
+chance: .17
+effects:
+  - type: guarantee_next_crit
+    ability: glacial_blast
+  - type: guarantee_next_crit
+    ability: ice_comet
+  - type: apply_buff
+    name: FrostweaversWrathTracking
+    duration_s: 12
+

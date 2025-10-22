@@ -10,6 +10,3 @@ pipeline:
     amount: 100
   - type: damage
     coeff: 990
-  - type: resource_gain
-    pool: spiritbar
-    amount: .4

@@ -8,5 +8,5 @@ patches:
     step:
       type: apply_buff
       name: WintersEmbrace
-      duration_s: 9        # 9s duration
+      duration_s: 3        # 9s duration
       damage_bonus: 1.2

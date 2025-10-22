@@ -1,3 +1,8 @@
 id: "6A"
 name: "Biting Cold"
 points: 1
+type: stat_mod
+stats:
+  - stat: critical_strike_multiplier
+    mod: add
+    amount: 0.2

@@ -1,3 +1,14 @@
 id: "6C"
 name: "Wisdom of the North"
 points: 2
+type: on_spend_mod
+affected:
+  - ability: ice_blitz
+    type: reduce_cd
+    amount: 0.30
+  - ability: flight_of_the_navir
+    type: reduce_cd
+    amount: 0.30
+  - ability: winters_blessing
+    type: reduce_cd
+    amount: 0.30

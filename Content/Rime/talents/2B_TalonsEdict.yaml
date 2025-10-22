@@ -1,3 +1,28 @@
 id: "2B"
 name: "Talon's Edict"
 points: 1
+type: on_damage_proc
+source_cast: per_step
+patches:
+  - ability: cold_snap
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+      - type: proc_damage
+        coeff: 189
+        require_crit: true
+        chance: 1
+  - ability: cold_snap
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+      - type: proc_damage
+        coeff: 63
+        chance: .15
+  - ability: freezing_torrent
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+      - type: proc_damage
+        coeff: 63
+        chance: .15

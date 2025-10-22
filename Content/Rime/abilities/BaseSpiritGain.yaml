@@ -1,0 +1,17 @@
+id: base_spirit_gain
+name: "Base Spirit Gain"
+cast: { gcd_s: 0.0, cast_time_s: 0.0 }
+cost: { ember: 0 }
+cooldown_s: 999999
+off_gcd: true
+pipeline:
+  - type: dot
+    name: BaseSpiritGain
+    duration_s: 999999
+    tick_s: 3
+    first_tick: interval
+    coeff_per_tick: 0
+    ember_per_tick: 0
+    spirit_per_tick: 1
+    bonus_crit: 0
+    is_hasted: false

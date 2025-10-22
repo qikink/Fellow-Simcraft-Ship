@@ -16,12 +16,11 @@ pipeline:
     bonus_crit: 0
     is_hasted: false
   - type: fanout
-    select:
-      count: 9999
-      include_primary: true
-      prefer_missing_aura: BurstingIce
-      owner_only_for_aura: true
-      distinct: true
+    count: 9999
+    include_primary: true
+    prefer_missing_aura: BurstingIce
+    owner_only_for_aura: true
+    distinct: true
     pipeline:
       - type: dot
         name: BurstingIce

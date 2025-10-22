@@ -1,6 +1,16 @@
 id: "3A"
 name: "Icy Flow"
 points: 2
+type: modify_cast
+source_casts: ["glacial_blast","ice_comet"]
+buff_name: IcyFlow
+required_stacks: 1
+effects:
+  - type: reduce_cast_time
+    amount: 0.5
+    waterfall: true
+  - type: grant_crit_chance
+    amount: 0.25
 patches:
   - ability: cold_snap
     op: insert_after
@@ -8,6 +18,6 @@ patches:
     step:
       type: apply_stacking_buff
       name: IcyFlow
-      duration_s: 8        # 9s duration
+      duration_s: 8
       stacks: 1
       max_stacks: 2

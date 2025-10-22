@@ -2,9 +2,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Dict, Any, List, Optional, Union
-from ..core.engine import s_to_us, CAST_END, DAMAGE, APL
+from ..core.engine import s_to_us, CAST_END, DAMAGE, APL, CHANNEL_TICK
 from ..core.dot import DotState
-from ..core.unit import Buff
+from ..core.unit import Buff, grant_charge, reduce_cooldown_us
+from math import floor
 
 ComponentExec = Callable[['Ctx', Dict[str, Any]], None]
 COMPONENTS: Dict[str, ComponentExec] = {}
@@ -25,6 +26,8 @@ class AbilitySpec:
     tags: List[str]
     charges: Optional[dict] = None  # e.g., {"max": 2, "recharge_s": 15.0}
     off_gcd: bool = False
+    on_cast_start: bool = False
+    is_hasted: bool = True
 
 class Ctx:
     """Context passed through pipeline and casts."""
@@ -33,6 +36,7 @@ class Ctx:
         self.caster, self.target, self.spec = caster, target, spec
         self.vars: Dict[str, Any] = {}
         self.wake_apl = wake_apl
+        self.outer_step_type = 'default'
 
     @property
     def power(self) -> float: return self.caster.power
@@ -71,21 +75,23 @@ def comp_damage(ctx: Ctx, step: dict):
 
     bonus_force_crit = 0
     force = ctx.caster.consume_next_crit(ctx.spec.id)
+    add_crit = ctx.caster.consume_next_crit_bonus(ctx.spec.id)
+
     if force:
         bonus_force_crit=1
-    if ctx.crit_chance()+bonus_force_crit > 1:
-        mult *= (ctx.crit_chance()+bonus_force_crit)
+    if ctx.crit_chance()+bonus_force_crit+add_crit > 1:
+        mult *= (ctx.crit_chance()+bonus_force_crit+add_crit)
 
     mult_from_ctx = float(ctx.vars.pop("damage_mult", 1.0))
     global_mult = ctx.caster.buff_damage_mult()
     base = coeff * ctx.power * mult * mult_from_ctx * global_mult
     # dynamic crit roll
-    is_crit = ctx.caster.rng.roll("crit", ctx.crit_chance())
+    is_crit = ctx.caster.rng.roll("crit", ctx.crit_chance()+add_crit)
     if force:
         is_crit = True
 
-    dmg = base * (2.0 if is_crit else 1.0)
-    ctx.caster.spiritbar.gain(dmg/1000) #gain spirit for damage dealt, approx 1% per 400% of primary stat dealt
+    dmg = base * (ctx.caster.critical_strike_multiplier if is_crit else 1.0)
+    ctx.caster.spiritbar.gain(dmg/1000) #gain spirit for damage dealt, approx 1% per 1000% of primary stat dealt
     ctx.caster.add_damage(dmg, ctx.spec.name)
     ctx.bus.pub("damage_done",
                 t_us=ctx.eng.t_us,
@@ -93,7 +99,8 @@ def comp_damage(ctx: Ctx, step: dict):
                 step_type="damage",
                 target=ctx.target,
                 crit=is_crit,
-                amount=dmg)
+                amount=dmg,
+                outer_step_type=ctx.outer_step_type,)
     ctx.vars["last_hit_amount"] = dmg
     ctx.vars["last_hit_crit"] = is_crit
     ctx.vars["last_hit_ability"] = ctx.spec.id
@@ -123,6 +130,10 @@ def comp_stack_dot(ctx: Ctx, step: dict):
     add_stacks = int(step.get("add_stacks", 1))
     first = step.get("first_tick", "interval")
     bonus_crit = float(step.get("bonus_crit", 0.0))
+    if step.get("fixed_crit"):
+        fixed_crit = float(step.get("fixed_crit"))
+    else:
+        fixed_crit = -1
     first_delay_us = int(round(base_tick_us / max(1e-9, ctx.caster.haste + ctx.caster.dot_haste_bonus()))) if first == "interval" else 0
 
     dot = ctx.target.auras.get(name)
@@ -135,7 +146,7 @@ def comp_stack_dot(ctx: Ctx, step: dict):
             base_tick_us=base_tick_us, coeff_per_tick=coeff_per_tick,
             ember_per_tick=0, spirit_per_tick=0,preserve_phase_on_refresh=True,
             stacks=0, max_stacks=max_stacks, stack_mult_per=stack_mult_per,
-            bonus_crit=bonus_crit
+            bonus_crit=bonus_crit, fixed_crit=fixed_crit,
         )
         ctx.target.auras[name] = dot
         ctx.caster.active_dots.append(dot)
@@ -156,12 +167,40 @@ def comp_channel(ctx: Ctx, step: dict):
     Requires 'ticks: int' and 'on_tick: [components...]' in the step.
     Assumes start_cast() set ctx.vars['cast_us'] and ctx.vars['cast_start_us'].
     """
-    ticks = int(step["ticks"])
+    ticks = step.get("ticks")
+    tick_dur = step.get("tick_dur")
     on_tick = step.get("on_tick", [])
+    #print("performing on_tick:",on_tick)
     cast_us = int(ctx.vars.get("cast_us", 0))
     start_us = int(ctx.vars.get("cast_start_us", ctx.eng.t_us))
-    if ticks <= 0 or cast_us <= 0: return
-    spacing = cast_us // ticks  # integer microseconds; last tick may land before cast end
+
+    temp_crit_bonus = 0
+    temp_haste_bonus = 0
+
+    for k in list(ctx.caster.buffs.keys()):
+        b = ctx.caster.buffs[k]
+        if b.props.get("affected_haste_bonus") is not None:
+            affected_id = b.props["affected_cast"]
+            if affected_id == ctx.spec.id:
+                amount = b.props["affected_haste_bonus"]
+                temp_haste_bonus += amount
+                ctx.caster.remove_buff(b)
+        if b.props.get("affected_crit_bonus") is not None:
+            affected_id = b.props["affected_cast"]
+            if affected_id == ctx.spec.id:
+                amount = b.props["affected_crit_bonus"]
+                temp_crit_bonus += amount
+                ctx.caster.remove_buff(b)
+
+    if (ticks is None and on_tick is None) or cast_us <= 0: return
+    if ticks is not None and ticks > 0:
+        spacing = cast_us // ticks  # integer microseconds; last tick may land before cast end
+    else: #we specify a tick duration, not a count
+        eff_haste = max(1e-9, ctx.caster.haste + ctx.caster.haste_bonus()+temp_haste_bonus)
+        tick_dur_us = s_to_us(tick_dur)
+        tick_dur_us = tick_dur_us/eff_haste
+        ticks = floor(cast_us/tick_dur_us)
+        spacing = start_us // ticks
 
     def make_cb(i: int):
         def _cb():
@@ -169,9 +208,14 @@ def comp_channel(ctx: Ctx, step: dict):
             run_pipeline(ctx, on_tick)
         return _cb
 
-    for i in range(1, ticks + 1):
+    if temp_crit_bonus>0: #actually give credit for the temporary crit, in a durable way across pipeline steps
+        ctx.caster.grant_next_crit_bonus(ctx.spec.id, ticks, temp_crit_bonus)
+
+    for i in range(1, ticks):
         t = start_us + i * spacing
-        ctx.eng.schedule_at(t, make_cb(i), phase=DAMAGE)
+        ctx.eng.schedule_at(t, make_cb(i), phase=CHANNEL_TICK)
+
+
 
 @component("dot")
 def comp_dot(ctx: Ctx, step: dict):
@@ -230,6 +274,7 @@ def comp_apply_buff(ctx: Ctx, step: dict):
     known = {"type","name","duration_s"}
     props = {k:v for k,v in step.items() if k not in known}
     ctx.caster.add_buff(Buff(name=name, expires_at_us=expires, props=props))
+    #print("Just added buff:",name,expires,props)
 
 @component("apply_stacking_buff")
 def comp_applystacking_buff(ctx: Ctx, step: dict):
@@ -239,6 +284,19 @@ def comp_applystacking_buff(ctx: Ctx, step: dict):
     known = {"type","name","duration_s"}
     props = {k:v for k,v in step.items() if k not in known}
     ctx.caster.add_stacking_buff(Buff(name=name, expires_at_us=expires, props=props))
+
+@component("apply_stacking_debuff")
+def comp_applystacking_debuff(ctx: Ctx, step: dict):
+    name = step["name"]
+    dur = step.get("duration_s")
+    expires = ctx.eng.t_us + s_to_us(float(dur)) if dur is not None else None
+    known = {"type","name","duration_s"}
+    props = {k:v for k,v in step.items() if k not in known}
+    #print("applying stacking buff")
+    if "stacks_on_crit" in props and ctx.vars["last_hit_crit"] and ctx.caster.rng.roll("apply extra stacks",props["stacks_on_crit_chance"]):
+        props["stacks"] = props["stacks_on_crit"]
+    #print("Buff:",name,expires,props)
+    ctx.target.add_stacking_buff(Buff(name=name, expires_at_us=expires, props=props))
 
 # sim/runtime/components.py
 def _world(ctx):
@@ -261,6 +319,11 @@ def comp_fanout(ctx: Ctx, step: dict):
     world = _world(ctx)
     assert world is not None, "fanout requires world in ctx.cfg"
 
+    chance = step.get("chance")
+    if chance:
+        if not ctx.caster.rng.roll("fanout chance",chance):
+            return
+
     sel = step.get("select", {})
     want = int(step.get("count", 1))
     include_primary = bool(step.get("include_primary", True))
@@ -270,6 +333,10 @@ def comp_fanout(ctx: Ctx, step: dict):
     owner_only_for_aura = bool(step.get("owner_only_for_aura", True))
     distinct = bool(step.get("distinct", True))
     side = step.get("owner", "enemies")
+    stack_buff = step.get("stack_buff", None)
+
+    if stack_buff:
+        ctx.vars["stacks"] = ctx.target.buffs.get(stack_buff, {}).props.get("stacks",0)
 
     # candidate pool
     if side == "enemies":
@@ -337,9 +404,11 @@ def comp_fanout(ctx: Ctx, step: dict):
         prev = ctx.target
         try:
             ctx.target = t
+            ctx.outer_step_type = 'fanout'
             run_pipeline(ctx, step.get("pipeline", []))
         finally:
             ctx.target = prev
+    ctx.outer_step_type = 'default'
 
 
 @component("dot_from_last_hit")
@@ -509,7 +578,7 @@ def comp_burst_dots(ctx: Ctx, step: dict):
         ctx.caster.spiritbar.gain(total / 400)
 
 @component("extend_dots")
-def extend_dots(ctx: Ctx, step: dict):
+def comp_extend_dots(ctx: Ctx, step: dict):
     extend_us = s_to_us(float(step.get("extend_s", 1.0)))
     excludes = set(step.get("exclude", []))
     for dot in list(ctx.target.auras.values()):
@@ -523,7 +592,7 @@ def extend_dots(ctx: Ctx, step: dict):
 
 
 @component("extra_hit")
-def extra_hit(ctx: Ctx, step: dict):
+def comp_extra_hit(ctx: Ctx, step: dict):
     """
      Fire extra hits after this cast.
      step:
@@ -558,3 +627,55 @@ def extra_hit(ctx: Ctx, step: dict):
         else:
             # single-target (current ctx.target)
             ctx.run([dmg_step])
+
+@component("reduce_cd")
+def comp_reduce_cd(ctx: Ctx, step: dict):
+
+    target_cast = str(step.get("cd", None))
+    source_cast = str(step.get("source_cast", ""))
+
+    if ctx.spec.name is None or ctx.spec.name != source_cast:
+        return
+    eng = ctx.caster.eng
+
+    extra_s = float(step.get("seconds", 0.0))
+    delta_us = s_to_us(extra_s)
+
+    if not target_cast:
+        return
+    # reduce cooldown safely
+    reduce_cooldown_us(ctx.caster, ctx.caster.eng, target_cast, delta_us)
+
+@component("proc_damage")
+def comp_proc_damage(ctx: Ctx, step: dict):
+    chance = step.get("chance",None)
+    require_crit = step.get("require_crit",None)
+
+    #test both conditions to deal damage
+    if require_crit and not ctx.vars["last_hit_crit"]:
+        return
+    if chance < 1 and not ctx.caster.rng.roll("proc damage",chance):
+        return
+    #if we pass both gates, deal the damage with the normal damage component
+    comp_damage(ctx,step)
+
+@component("grant_charge")
+def comp_grant_charge(ctx: Ctx, step: dict):
+    ability = step.get("ability",None)
+    amount = int(step.get("amount",1))
+    grant_charge(ctx.caster, ctx.caster.eng, ability, amount)
+
+@component("damage_per_stack")
+def comp_damage_per_stack(ctx: Ctx, step: dict):
+    """
+    Deal damage per stack of a buff
+    """
+    #print("trying to deal per-stack damage")
+    ticks = ctx.vars["stacks"] or 0
+    #print("ticks:",ticks)
+    for i in range(1,ticks):
+        #print("doing per stack damage time:",i)
+        #print("with context:",ctx)
+        #print("for step:",step)
+        comp_damage(ctx,step)
+

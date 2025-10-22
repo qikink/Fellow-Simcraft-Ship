@@ -6,11 +6,19 @@ patches:
     op: insert_after
     where: { type: damage }   # the per-target damage step
     step:
-      - type: fanout
-        pipeline:
-        - type: damage
-          name: BurstingIce
-          coeff: 55
-        - type: resource_gain
-          pool: ember
-          amount: 22.24
+      - type: resource_gain
+        pool: ember
+        amount: 22.24
+  - ability: frostbolt
+    op: insert_after
+    where: { type: damage }   # the per-target damage step
+    step:
+    - type: fanout
+      count: 9999
+      include_primary: true
+      distinct: true
+      pipeline:
+      - type: damage
+        name: BurstingIce
+        coeff: 55
+

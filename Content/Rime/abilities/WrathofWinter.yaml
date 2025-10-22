@@ -4,7 +4,15 @@ tags: [cooldown, nuke, dot_applier]
 cast: { gcd_s: 1.5, cast_time_s: 0.0 }
 cost: { spirit_bar: 100 }
 cooldown_s: 0
+type: modify_cast
+source_cast: glacial_blast
+buff_name: WrathOfWinter
+effects:
+  - type: make_cast_instant
 pipeline:
+  - type: resource_spend
+    pool: spirit
+    amount: 100
   - type: apply_buff
     name: Heroism
     duration_s: 20

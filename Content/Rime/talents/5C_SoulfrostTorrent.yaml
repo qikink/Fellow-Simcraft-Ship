@@ -1,4 +1,17 @@
 id: "5C"
 name: "Soulfrost Torrent"
 points: 3
+type: on_cast_ppm_proc
+ppm: 1.5
+effects:
+  - type: apply_buff
+    name: SoulfrostTorrentCrit
+    duration_s: 18
+    affected_cast: freezing_torrent
+    affected_crit_bonus: 1
+  - type: apply_buff
+    name: SoulfrostTorrentHaste
+    duration_s: 18
+    affected_cast: freezing_torrent
+    affected_haste_bonus: 0.4
 
